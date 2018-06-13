@@ -1,0 +1,25 @@
+<configuration >
+    <!--Set the path for the destination folder where the log files shall be written-->
+    <property name="LOG_PATH" value="/tmp/lpa-scr"/>
+    
+    
+    
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <!--This appender will write the logs to the stdout-->
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+    </appender>
+  
+  <logger name="com.truphone" level="info" additivity="false" >
+        <!--All logs written from the within com.truphone.* classes will be written to these appenders.-->
+        <appender-ref ref="console"/>
+    </logger>
+  
+    <!--We don't want to log anything outside com.truphone.*. The level of root logger shall be set to OFF.-->
+    <root level="debug"	>
+		<appender-ref ref="console"/>
+	</root>
+  
+</configuration>
+
