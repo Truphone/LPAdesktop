@@ -117,7 +117,7 @@ public class ApduChannelImpl implements ApduChannel{
     public void close() throws CardException
     {
         //logicalChannel.close();
-        basicChannel.close();
+        basicChannel.getCard().disconnect(true);
     }
     
      public static String byteArrayToHex(byte[] bytes) {

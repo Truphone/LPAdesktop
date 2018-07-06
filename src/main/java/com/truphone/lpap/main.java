@@ -5,24 +5,24 @@
  */
 package com.truphone.lpap;
 
-import com.truphone.apdu.channel.simulator.LpadApduChannelSimulator;
-import com.truphone.apdu.channel.simulator.persistence.MapPersistence;
 import com.truphone.lpa.impl.LocalProfileAssistantImpl;
 import com.truphone.lpa.progress.DownloadProgress;
 import com.truphone.lpad.progress.Progress;
 import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.util.LogStub;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import javax.smartcardio.CardException;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -35,30 +35,23 @@ public class main {
      */
     public static void main(String[] args) throws CardException, Exception {
         LogStub.getInstance().setLogLevel(Level.ALL);
+
+        //GET SERVER ADDRESS AND KEYSTORE FROM PROPERTIES
         Properties prop = readProperties();
 
-        //default values
-        String serverAddress = "https://rsp-acme-test.truphone.com:25105";
-        String keystore_file = "/Users/amilcar.pereira/Keys/digicertks.jks";
+        String serverAddress = "", keystore_file = "";
 
         //red properties from file
-        if (prop != null) {
+        if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file"))) {
             serverAddress = prop.getProperty("serverAddress");
             keystore_file = prop.getProperty("keystore_file");
+        } else {
+            new Exception("serverAddress and keystore_file must be set on app.properties file");
         }
 
         System.setProperty("javax.net.ssl.trustStore", keystore_file);
 
-        /*//rsp-demo
-        //System.setProperty("javax.net.ssl.trustStore","/Users/amilcar.pereira/Keys/rspdemo_es9.jks");
-        //String serverAddress="https://rsp-demo.truphone.com:25101";
-        //acme
-        String serverAddress = "https://rsp-acme-test.truphone.com:25105";
-        System.setProperty("javax.net.ssl.trustStore", "/Users/amilcar.pereira/Keys/digicertks.jks");
-
-        //String serverAddress = "https://rsp-entrust.truphone.com";
-        //System.setProperty("javax.net.ssl.trustStore", "/Users/amilcar.pereira/Keys/entrust.jks");*/
-        // Your ApduChannelImpl implementation
+        //START THE LPA
         ApduChannelImpl apduChannel = new ApduChannelImpl();
 
         LocalProfileAssistantImpl lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
@@ -97,6 +90,7 @@ public class main {
             System.out.println("5-Delete Profile");
             System.out.println("6-Get EID Profile");
             System.out.println("7-Process Notifications");
+            System.out.println("9-Reset LPA");
             System.out.println("0-Exit");
 
             System.out.println("------------------------------");
@@ -112,10 +106,11 @@ public class main {
             String iccid;
             switch (option) {
                 case 0:
-                    System.in.read();
                     System.exit(0);
 
                 case 1:
+                    profiles = lpa.getProfiles();
+                            
                     System.out.println("\nProfiles List:");
                     System.out.println(profiles);
                     break;
@@ -138,6 +133,7 @@ public class main {
                     iccid = reader.readLine();
 
                     try {
+
                         lpa.enableProfile(iccid, progress);
 
                     } catch (Exception ex) {
@@ -152,6 +148,7 @@ public class main {
                     iccid = reader.readLine();
 
                     try {
+
                         lpa.disableProfile(iccid, progress);
 
                     } catch (Exception ex) {
@@ -166,6 +163,7 @@ public class main {
                     iccid = reader.readLine();
 
                     try {
+
                         lpa.deleteProfile(iccid, progress);
 
                     } catch (Exception ex) {
@@ -190,6 +188,26 @@ public class main {
                     }
 
                     break;
+
+                case 9:
+                    //RESTART THE LPA
+                    apduChannel.close();
+                    
+                    apduChannel = new ApduChannelImpl();
+                    lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
+
+                    dwnProgress = new DownloadProgress();
+                    dwnProgress.setProgressListener(new ProgressListener() {
+                        @Override
+                        public void onAction(String phase, String step, Double percentage, String message) {
+
+                            System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
+                        }
+                    });
+
+                    progress = new Progress();
+
+                    break;
                 default:
                     break;
 
@@ -198,13 +216,13 @@ public class main {
 
     }
 
-    private static Properties readProperties() {
+    private static Properties readProperties() throws URISyntaxException {
         Properties prop = new Properties();
         InputStream input = null;
 
         try {
 
-            input = new FileInputStream("app.properties");
+            input = new FileInputStream(new File(main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile() + "/app.properties");
 
             // load a properties file
             prop.load(input);
