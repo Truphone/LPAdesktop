@@ -56,33 +56,25 @@ public class main {
 
         System.setProperty("javax.net.ssl.trustStore", keystore_file);
 
-        //START THE LPA
-        ApduChannelImpl apduChannel = new ApduChannelImpl();
-
-        LocalProfileAssistantImpl lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
-
-        DownloadProgress dwnProgress = new DownloadProgress();
-        dwnProgress.setProgressListener(new ProgressListener() {
-            @Override
-            public void onAction(String phase, String step, Double percentage, String message) {
-
-                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-            }
-        });
-
-        Progress progress = new Progress();
-
+      
+        LpaSrc lpa = new LpaSrc(serverAddress);
         String eid = lpa.getEID();
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.out.println("+           Local Profile Assistant               +");
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.out.println("EID: " + eid);
 
-        List<Map<String, String>> profiles = lpa.getProfiles();
+        
+//        List<Map<String, String>> profiles = lpa.getProfiles();
+//
+//        System.out.println("\nProfiles List:");
+//        System.out.println(profiles);
 
         System.out.println("\nProfiles List:");
-        System.out.println(profiles);
+        System.out.println(lpa.getProfiles());
 
+        
+        
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         int option;
@@ -97,6 +89,7 @@ public class main {
             System.out.println("7-Process Notifications");
             System.out.println("9-Reset LPA");
             System.out.println("10-Set SMDP Address");
+            System.out.println("11-Get SMDP Address");
             System.out.println("21-Download in bulk (test purposes)");
 
             System.out.println("0-Exit");
@@ -117,23 +110,21 @@ public class main {
                     System.exit(0);
 
                 case 1:
-                    profiles = lpa.getProfiles();
-
                     System.out.println("\nProfiles List:");
-                    System.out.println(profiles);
+                    System.out.println(lpa.getProfiles());
                     break;
 
                 case 2:
                     System.out.println("Enter Matching ID or Activation code: ");
                     String activationCode = reader.readLine();
 
-                    try {
-                        lpa.downloadProfile(activationCode, dwnProgress);
-                    } catch (Exception ex) {
-                        System.out.println("Download profile failed. ");
-                        ex.printStackTrace();
+//                    try {
+                        lpa.downloadProfile(activationCode);
+//                    } catch (Exception ex) {
+//                        System.out.println("Download profile failed. ");
+//                        ex.printStackTrace();
 
-                    }
+//                    }
                     break;
                 case 3:
                     System.out.println("Enter ICCID or AID:");
@@ -141,7 +132,7 @@ public class main {
 
                     try {
 
-                        lpa.enableProfile(iccid, progress);
+                        lpa.enableProfile(iccid);
 
                     } catch (Exception ex) {
                         System.out.println("Enable profile failed. ");
@@ -156,7 +147,7 @@ public class main {
 
                     try {
 
-                        lpa.disableProfile(iccid, progress);
+                        lpa.disableProfile(iccid);
 
                     } catch (Exception ex) {
                         System.out.println("Disable profile failed. ");
@@ -171,7 +162,7 @@ public class main {
 
                     try {
 
-                        lpa.deleteProfile(iccid, progress);
+                        lpa.deleteProfile(iccid);
 
                     } catch (Exception ex) {
                         System.out.println("Delete profile failed.");
@@ -185,39 +176,35 @@ public class main {
                     System.out.println("EID: " + lpa.getEID());
                     break;
                 case 7:
-                    try {
-                        lpa.processPendingNotifications();
+//                    try {
+                        lpa.processPendingNotificaitons();
 
-                    } catch (Exception ex) {
-                        System.out.println("Process Notifications failed. ");
-                        ex.printStackTrace();
-
-                    }
+//                    } catch (Exception ex) {
+//                        System.out.println("Process Notifications failed. ");
+//                        ex.printStackTrace();
+//
+//                    }
 
                     break;
 
                 case 9:
                     //RESTART THE LPA
-                    apduChannel.close();
-
-                    apduChannel = new ApduChannelImpl();
-                    lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
-
-                    dwnProgress = new DownloadProgress();
-                    dwnProgress.setProgressListener(new ProgressListener() {
-                        @Override
-                        public void onAction(String phase, String step, Double percentage, String message) {
-
-                            System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-                        }
-                    });
-
-                    progress = new Progress();
+                    lpa.resetLpa();
 
                     break;
                 case 10:
                     //set SMDP Address
-                    //lpa.deleteProfile(iccid, progress)
+                    
+                        System.out.println("Enter DP+ Address:");
+                        String dpAddress = reader.readLine();
+        
+                        lpa.setSMDPAddress(dpAddress);
+                     
+                    break;
+                 case 11:
+                    //set SMDP Address
+                     System.out.println("Default SMDP Address: " + lpa.getSMDPAddress());
+                     
                     break;
                 case 21:
 
@@ -245,85 +232,31 @@ public class main {
                         
                         //---------install
                         try {
-                            lpa.downloadProfile(ac, dwnProgress);
+                            lpa.downloadProfile(ac);
                         } catch (Exception ex) {
                             System.out.println("ERROR: Download profile failed for Activation Code " + ac);
                             ex.printStackTrace();
                             continue;
                         }
 
-                        //---------reset 
-                        //RESTART THE LPA
-                        apduChannel.close();
-
-                        apduChannel = new ApduChannelImpl();
-                        lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
-
-                        dwnProgress = new DownloadProgress();
-                        dwnProgress.setProgressListener(new ProgressListener() {
-                            @Override
-                            public void onAction(String phase, String step, Double percentage, String message) {
-
-                                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-                            }
-                        });
-
-                        progress = new Progress();
-
-                        //---------send notification
-                        try {
-                            lpa.processPendingNotifications();
-                        } catch (Exception ex) {
-                            System.out.println("ERROR: Process Notifications failed. ");
-                            ex.printStackTrace();
-                            
-                        }
+                     
 
                         //---------retrieve the last profile installed
-                        profiles = lpa.getProfiles();
+                        List<Map<String,String>> profiles = lpa.getProfiles();
                         Map<String,String> profile = profiles.get(profiles.size()-1);
                         iccid = profile.get("ICCID");
                         
                         //---------delete
                         try {
 
-                            lpa.deleteProfile(iccid, progress);
+                            lpa.deleteProfile(iccid);
 
                         } catch (Exception ex) {
                             System.out.println("ERROR: Delete profile failed.");
                             ex.printStackTrace();
 
                         }
-
-                        //---------reset
-                        //RESTART THE LPA
-                        apduChannel.close();
-
-                        apduChannel = new ApduChannelImpl();
-                        lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
-
-                        dwnProgress = new DownloadProgress();
-                        dwnProgress.setProgressListener(new ProgressListener() {
-                            @Override
-                            public void onAction(String phase, String step, Double percentage, String message) {
-
-                                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-                            }
-                        });
-
-                        progress = new Progress();
-
-                        //---------send notification
-                        try {
-                            lpa.processPendingNotifications();
-
-                        } catch (Exception ex) {
-                            System.out.println("ERROR: Process Notifications failed. ");
-                            ex.printStackTrace();
-
-                        }
-                         
-                        
+ 
                         System.out.println("------------------------------------------------");
                         System.out.println("    End processing AC " + ac);
                         System.out.println("------------------------------------------------");
@@ -365,5 +298,7 @@ public class main {
         }
         return prop;
     }
+
+    
 
 }
