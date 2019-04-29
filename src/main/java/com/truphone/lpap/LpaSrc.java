@@ -24,12 +24,13 @@ public class LpaSrc {
     Progress progress;
     ApduChannelImpl apduChannel;
     String serverAddress;
+    String cardReaderName;
 
-    public LpaSrc(String serverAddress) throws CardException {
+    public LpaSrc(String serverAddress, String cardReader) throws CardException {
         this.serverAddress = serverAddress;
-
+        this.cardReaderName = cardReader;
         //START THE LPA
-        apduChannel = new ApduChannelImpl();
+        apduChannel = new ApduChannelImpl(cardReader);
 
         lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
 
@@ -89,7 +90,7 @@ public class LpaSrc {
 
         apduChannel.close();
 
-        apduChannel = new ApduChannelImpl();
+        apduChannel = new ApduChannelImpl(cardReaderName);
         lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
 
         dwnProgress = new DownloadProgress();

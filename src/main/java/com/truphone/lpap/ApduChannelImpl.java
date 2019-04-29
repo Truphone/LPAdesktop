@@ -30,11 +30,12 @@ public class ApduChannelImpl implements ApduChannel{
     private CardChannel basicChannel;//, logicalChannel;
     ApduTransmittedListener apduTransmittedListener;
     
-    public ApduChannelImpl() throws CardException{
+    public ApduChannelImpl(String cardReader) throws CardException{
         //open channel to the card
         TerminalFactory terminalFactory = TerminalFactory.getDefault();
         CardTerminals cardTerminals = terminalFactory.terminals();
-        CardTerminal cardTerminal = cardTerminals.list().get(0);
+        //CardTerminal cardTerminal = cardTerminals.list().get(0);
+        CardTerminal cardTerminal = cardTerminals.getTerminal(cardReader);
         Card card = cardTerminal.connect("T=0");
         basicChannel = card.getBasicChannel();
         

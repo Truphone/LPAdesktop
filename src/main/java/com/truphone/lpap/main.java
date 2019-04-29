@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import javax.smartcardio.CardException;
+import javax.smartcardio.CardTerminal;
+import javax.smartcardio.CardTerminals;
+import javax.smartcardio.TerminalFactory;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -45,19 +48,51 @@ public class main {
         Properties prop = readProperties();
 
         String serverAddress = "", keystore_file = "";
-
+        String cardReaderToUse="", cardReaderFromProps="";
+        
         //red properties from file
         if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file"))) {
             serverAddress = prop.getProperty("serverAddress");
             keystore_file = prop.getProperty("keystore_file");
+            
+            if(!StringUtils.isEmpty(prop.getProperty("card_reader"))){
+                cardReaderFromProps = prop.getProperty("card_reader");
+            }
         } else {
-            new Exception("serverAddress and keystore_file must be set on app.properties file");
+            throw new Exception("serverAddress and keystore_file must be set on app.properties file");
         }
-
+        
+        
+        
+        TerminalFactory terminalFactory = TerminalFactory.getDefault();
+        CardTerminals cardTerminals = terminalFactory.terminals();
+        
+        if(cardTerminals.list().size()==0){
+            throw new Exception("No card readers detected!");
+        } if(cardTerminals.list().size()==1){
+            cardReaderToUse=cardTerminals.list().get(0).getName();
+        }else{
+            CardTerminal terminal = cardTerminals.getTerminal(cardReaderFromProps);
+            if(terminal==null){
+                StringBuilder sb = new StringBuilder();
+                sb.append("The card reader set on properties file (").append(cardReaderFromProps).append(") could not be found.").append(System.getProperty("line.separator"));
+                sb.append("Readers available: ").append(System.getProperty("line.separator"));
+                for (CardTerminal t : cardTerminals.list()) {
+                    sb.append(t.getName()).append(System.getProperty("line.separator"));
+                }
+                        
+                sb.append("Please update the name or remove the property to use the default reader");
+                throw new Exception(sb.toString());
+            }
+            
+            cardReaderToUse = terminal.getName();
+            
+        }
+        
         System.setProperty("javax.net.ssl.trustStore", keystore_file);
 
       
-        LpaSrc lpa = new LpaSrc(serverAddress);
+        LpaSrc lpa = new LpaSrc(serverAddress, cardReaderToUse);
         String eid = lpa.getEID();
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.out.println("+           Local Profile Assistant               +");
