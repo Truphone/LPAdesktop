@@ -153,13 +153,18 @@ public class main {
                     System.out.println("Enter Matching ID or Activation code: ");
                     String activationCode = reader.readLine();
 
-//                    try {
+                    try {
                         lpa.downloadProfile(activationCode);
-//                    } catch (Exception ex) {
-//                        System.out.println("Download profile failed. ");
-//                        ex.printStackTrace();
-
-//                    }
+                    } catch (Exception ex) {
+                        System.out.println("Download profile failed. ");
+                        System.out.println(ex.toString());
+                        
+                        System.out.println("PRESS ANY KEY TO CONTINUE");
+                        System.in.read();
+                        lpa.processPendingNotificaitons();
+                    }
+                    
+                    
                     break;
                 case 3:
                     System.out.println("Enter ICCID or AID:");
