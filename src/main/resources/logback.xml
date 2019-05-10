@@ -1,19 +1,39 @@
-<configuration >
+<configuration debug="true">
     <!--Set the path for the destination folder where the log files shall be written-->
-    <property name="LOG_PATH" value="/tmp/lpa-scr"/>
+    <property name="LOG_PATH" value="/tmp/lpa"/>
     
     
     
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <!--This appender will write the logs to the stdout-->
         <encoder>
-            <pattern>%m%n</pattern>
+            <pattern>%d{ISO8601}|%X{sessionId}|%t|%p|%m|%throwable{1}%n</pattern>
         </encoder>
     </appender>
   
-  <logger name="com.truphone" level="info" additivity="false" >
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--This appender will write the logs to a file, rotating it every day-->
+        <prudent>true</prudent>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_PATH}/logFile.%d{yyyyMMdd}.log</fileNamePattern>
+
+            <!-- keep 30 days' worth of history capped at 3GB total size -->
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+    
+        <encoder>
+            <pattern>%d{ISO8601}|%X{sessionId}|%t|%p|%c{1}|%m|%throwable{1}%n</pattern>
+        </encoder>
+    </appender>
+  
+    
+    <logger name="com.truphone" level="debug" additivity="false" >
         <!--All logs written from the within com.truphone.* classes will be written to these appenders.-->
         <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
     </logger>
   
     <!--We don't want to log anything outside com.truphone.*. The level of root logger shall be set to OFF.-->
@@ -22,4 +42,3 @@
 	</root>
   
 </configuration>
-
