@@ -5,8 +5,12 @@
  */
 package com.truphone.lpap;
 
+import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
 import com.truphone.util.LogStub;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.MouseListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,9 +27,11 @@ import javax.smartcardio.CardTerminal;
 import javax.smartcardio.CardTerminals;
 import javax.smartcardio.TerminalFactory;
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
@@ -37,17 +43,20 @@ import org.apache.commons.lang3.StringUtils;
 public class LPAUI extends javax.swing.JFrame {
 
     private static java.util.logging.Logger LOG = null;
+    private WaitingDialog waitDlg;
 
     static {
-        InputStream stream = main.class.getClassLoader().
-                getResourceAsStream("logging.properties");
-        try {
-            LogManager.getLogManager().readConfiguration(stream);
-            LOG = Logger.getLogger(main.class.getName());
+//        InputStream stream = main.class.getClassLoader().
+//                getResourceAsStream("logging.properties");
+        //try {
+        System.setProperty("java.util.logging.config.file",
+                "logging.properties");
+        //LogManager.getLogManager().readConfiguration(stream);
+        LOG = Logger.getLogger(main.class.getName());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //} catch (IOException e) {
+        //    e.printStackTrace();
+        //}
     }
 
     LpaSrc lpa;
@@ -93,25 +102,13 @@ public class LPAUI extends javax.swing.JFrame {
 
         System.setProperty("javax.net.ssl.trustStore", keystore_file);
 
-//        JPopupMenu popupMenu = new JPopupMenu();
-//        
-//        JMenuItem menuItemEnable = new JMenuItem("Enable");
-//        menuItemEnable.setActionCommand("ENABLE_PROFILE");
-//        
-//        JMenuItem menuItemDisable = new JMenuItem("Disable");
-//        menuItemDisable.setActionCommand("DISABLE_PROFILE");
-//        
-//        JMenuItem menuItemDelete = new JMenuItem("Delete");
-//        menuItemDelete.setActionCommand("DELETE_PROFILE");
-//        
-//        popupMenu.add(menuItemEnable);
-//        popupMenu.add(menuItemDisable);
-//        popupMenu.add(menuItemDelete);
-//
-//        tblProfiles.setComponentPopupMenu(popupMenu);
-//
-//        TableMouseListener listener = new TableMouseListener(tblProfiles);
-//        tblProfiles.addMouseListener(listener);
+        lblProgress.setVisible(false);
+
+        waitDlg = new WaitingDialog(this, true);
+        
+        this.setIconImage(new ImageIcon(getClass().getResource("/tru_logo.png")).getImage());
+       
+
     }
 
     /**
@@ -145,6 +142,7 @@ public class LPAUI extends javax.swing.JFrame {
         txtEuiccInfo = new javax.swing.JTextArea();
         jLabel4 = new javax.swing.JLabel();
         btnSetSMDPAddress = new javax.swing.JButton();
+        lblProgress = new javax.swing.JLabel();
 
         miEnableProfile.setText("Enable");
         miEnableProfile.addActionListener(new java.awt.event.ActionListener() {
@@ -177,14 +175,6 @@ public class LPAUI extends javax.swing.JFrame {
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        tblProfiles.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-
-            }
-        ));
         tblProfiles.setComponentPopupMenu(popUpProfiles);
         jScrollPane1.setViewportView(tblProfiles);
 
@@ -242,6 +232,9 @@ public class LPAUI extends javax.swing.JFrame {
             }
         });
 
+        lblProgress.setIcon(new javax.swing.ImageIcon(getClass().getResource("/wait_small.gif"))); // NOI18N
+        lblProgress.setText("Processing");
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
@@ -254,14 +247,11 @@ public class LPAUI extends javax.swing.JFrame {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addComponent(jLabel1)
-                        .addGap(656, 662, Short.MAX_VALUE))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(mainPanelLayout.createSequentialGroup()
                                 .addGap(0, 0, Short.MAX_VALUE)
                                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnSetSMDPAddress, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -272,7 +262,12 @@ public class LPAUI extends javax.swing.JFrame {
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(btnRefreshReaders)
                                         .addGap(18, 18, 18)
-                                        .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                        .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(mainPanelLayout.createSequentialGroup()
+                                .addGap(12, 12, 12)
+                                .addComponent(lblProgress)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addContainerGap())))
             .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(mainPanelLayout.createSequentialGroup()
@@ -291,10 +286,10 @@ public class LPAUI extends javax.swing.JFrame {
                 .addComponent(jLabel4)
                 .addGap(31, 31, 31)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnConnect)
                     .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(cmbReaders, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel2)
-                        .addComponent(btnConnect))
+                        .addComponent(jLabel2))
                     .addComponent(btnRefreshReaders))
                 .addGap(24, 24, 24)
                 .addComponent(jLabel1)
@@ -302,8 +297,10 @@ public class LPAUI extends javax.swing.JFrame {
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnSetSMDPAddress)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 286, Short.MAX_VALUE)
-                .addComponent(btnAddProfile)
+                .addGap(286, 286, 286)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnAddProfile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(lblProgress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
             .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(mainPanelLayout.createSequentialGroup()
@@ -337,29 +334,49 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRefreshReadersActionPerformed
 
     private void miEnableProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miEnableProfileActionPerformed
+
         int selectedRow = tblProfiles.getSelectedRow();
         String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
 
-        try {
-            lpa.enableProfile(isdp_aid);
-        } catch (CardException ex) {
-            JOptionPane.showMessageDialog(this, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
-        }
+        Thread t = new Thread() {
+            public void run() {
+                setProcessing(true);
+                try {
 
-        listProfiles();
+                    lpa.enableProfile(isdp_aid);
+                } catch (CardException ex) {
+                    JOptionPane.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
+                }
+
+                listProfiles();
+                setProcessing(false);
+            }
+        };
+
+        t.start();
     }//GEN-LAST:event_miEnableProfileActionPerformed
 
     private void miDisableProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDisableProfileActionPerformed
+
         int selectedRow = tblProfiles.getSelectedRow();
         String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
 
-        try {
-            lpa.disableProfile(isdp_aid);
-        } catch (CardException ex) {
-            JOptionPane.showMessageDialog(this, "Failed to Disable the profile with AID " + isdp_aid + ". Please check the log.");
-        }
+        Thread t = new Thread() {
+            public void run() {
+                setProcessing(true);
+                try {
+                    lpa.disableProfile(isdp_aid);
+                } catch (CardException ex) {
+                    JOptionPane.showMessageDialog(null, "Failed to Disable the profile with AID " + isdp_aid + ". Please check the log.");
+                }
 
-        listProfiles();
+                listProfiles();
+                setProcessing(false);
+            }
+        };
+
+        t.start();
+
     }//GEN-LAST:event_miDisableProfileActionPerformed
 
     private void miDeleteProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDeleteProfileActionPerformed
@@ -369,55 +386,115 @@ public class LPAUI extends javax.swing.JFrame {
         String profileName = (String) tblProfiles.getValueAt(selectedRow, 3);
         String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
 
-        if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid)) == JOptionPane.OK_OPTION) {
-            try {
-                lpa.deleteProfile(isdp_aid);
-            } catch (CardException ex) {
-                JOptionPane.showMessageDialog(this, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
-            }
+        if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+            Thread t = new Thread() {
+                public void run() {
+                    setProcessing(true);
+                    try {
+
+                        lpa.deleteProfile(isdp_aid);
+
+                    } catch (CardException ex) {
+                        JOptionPane.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
+                    }
+
+                    listProfiles();
+                    setProcessing(false);
+                }
+            };
+
+            t.start();
         }
 
-        listProfiles();
     }//GEN-LAST:event_miDeleteProfileActionPerformed
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
+
         if (cmbReaders.getItemCount() > 0) {
             try {
                 lpa = new LpaSrc(serverAddress, (String) cmbReaders.getSelectedItem());
             } catch (CardException ex) {
                 JOptionPane.showMessageDialog(this, "Failed to start LPA. Please check the log.");
             }
-
-            listProfiles();
         } else {
             JOptionPane.showMessageDialog(this, "No reader selected");
         }
 
-        updateEuiccInfo();
+        lpa.setProgressListener(new ProgressListener() {
+            @Override
+            public void onAction(String phase, String step, Double percentage, String message) {
+//                String statusText = step + "-" + message;
+                //lblProgress.setText(statusText);
+                //progressBar.setValue(percentage.intValue() * 100);
+                //progressBar.updateUI();
+//                System.out.println("Phase: " + phase);
+//                System.out.println("Step: " + step);
+//                System.out.println("Percentage: " + percentage.toString());
+//                System.out.println("Message: " + message);
+            }
+        });
+
+        Thread t = new Thread() {
+            public void run() {
+                setProcessing(true);
+                listProfiles();
+                updateEuiccInfo();
+                setProcessing(false);
+
+            }
+        };
+        t.start();
 
         btnAddProfile.setEnabled(true);
         btnSetSMDPAddress.setEnabled(true);
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
-        String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
 
-        try {
-            lpa.downloadProfile(activationCode);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Failed to download the profile. Please check the log.");
+        String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
+        if (activationCode == null) {
+            return;
         }
 
-        listProfiles();
+        Thread t = new Thread() {
+            public void run() {
+                try {
+                    setProcessing(true);
+                    lpa.downloadProfile(activationCode);
+
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Failed to download the profile. Please check the log.");
+                }
+
+                listProfiles();
+
+            }
+        };
+
+        t.start();
+
+        try {
+            t.join(30000);
+        } catch (InterruptedException ex) {
+            JOptionPane.showMessageDialog(null, "Something went wrong. Please check the log");
+        }
+
+        setProcessing(false);
+
+
     }//GEN-LAST:event_btnAddProfileActionPerformed
 
     private void btnSetSMDPAddressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetSMDPAddressActionPerformed
         String address = JOptionPane.showInputDialog(this, "Enter new SMDP+ address");
 
         //lpa.setSMDPAddress(com.truphone.util.Util.ASCIIToHex(address));
+        setProcessing(true);
+        
         lpa.setSMDPAddress(address);
-
         updateEuiccInfo();
+        
+        setProcessing(false);
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
 
     /**
@@ -475,6 +552,7 @@ public class LPAUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblProgress;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuItem miDeleteProfile;
     private javax.swing.JMenuItem miDisableProfile;
@@ -500,18 +578,18 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void listProfiles() {
         List<Map<String, String>> profiles = lpa.getProfiles();
-
-        DefaultTableModel model = new DefaultTableModel();
-
-        model.addColumn("Iccid");
-        model.addColumn("Profile name");
-        model.addColumn("State");
-        model.addColumn("Serv. Prov. Name");
-        model.addColumn("Isd-p Aid");
-        model.addColumn("Profile Class");
         
-                
-       
+        DefaultTableModel model = new DefaultTableModel();
+        
+        model.addColumn("Iccid");
+        model.addColumn("Name");
+        model.addColumn("State");
+        model.addColumn("Spn");
+        model.addColumn("Aid");
+        model.addColumn("Class");
+        
+
+        
         for (Map<String, String> profile : profiles) {
             String[] fields = new String[profile.size()];
 
@@ -556,8 +634,17 @@ public class LPAUI extends javax.swing.JFrame {
 
         tblProfiles.setModel(model);
         if (model.getRowCount() > 0) {
-            tblProfiles.setRowSelectionInterval(0, 0);
+            tblProfiles.setRowSelectionInterval(0, 0);  
         }
+        
+        tblProfiles.getColumnModel().getColumn(0).setPreferredWidth(130);
+//        tblProfiles.getColumnModel().getColumn(1).setPreferredWidth(150);
+        tblProfiles.getColumnModel().getColumn(2).setPreferredWidth(50);
+        tblProfiles.getColumnModel().getColumn(3).setPreferredWidth(70);
+        tblProfiles.getColumnModel().getColumn(4).setPreferredWidth(130);
+//        tblProfiles.getColumnModel().getColumn(5).setPreferredWidth(100);
+        
+        
     }
 
     private void updateEuiccInfo() {
@@ -566,7 +653,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         InputStream is;
         EuiccConfiguredAddressesResponse configuredAddress = new EuiccConfiguredAddressesResponse();
-        String rootDsAddress="", defaultSmdpAddress="";
+        String rootDsAddress = "", defaultSmdpAddress = "";
 
         try {
             is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
@@ -579,9 +666,25 @@ public class LPAUI extends javax.swing.JFrame {
 
         sb.append("Root SM-DS: ").append(rootDsAddress).append(System.getProperty("line.separator"));
         sb.append("Default SM-DP: ").append(defaultSmdpAddress).append(System.getProperty("line.separator"));
-     
+
         txtEuiccInfo.setText(sb.toString());
 
+    }
+
+    private void setProcessing(boolean processing) {
+//        Thread t = new Thread() {
+//            public void run() {
+        lblProgress.setVisible(processing);
+        btnRefreshReaders.setEnabled(!processing);
+        btnConnect.setEnabled(!processing);
+        btnSetSMDPAddress.setEnabled(!processing);
+        btnAddProfile.setEnabled(!processing);
+        cmbReaders.setEditable(!processing);
+
+//            }
+//        };
+//        
+//        t.start();
     }
 
 }

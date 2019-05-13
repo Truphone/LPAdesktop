@@ -41,13 +41,13 @@ public class LpaSrc {
         lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
 
         dwnProgress = new DownloadProgress();
-        dwnProgress.setProgressListener(new ProgressListener() {
-            @Override
-            public void onAction(String phase, String step, Double percentage, String message) {
-
-                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-            }
-        });
+//        dwnProgress.setProgressListener(new ProgressListener() {
+//            @Override
+//            public void onAction(String phase, String step, Double percentage, String message) {
+//
+//                //System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
+//            }
+//        });
 
         progress = new Progress();
     }
@@ -63,7 +63,7 @@ public class LpaSrc {
 //    public DownloadProgress getdownloadProgress(){
 //        return dwnProgress;
 //    }
-//    
+    
     public void downloadProfile(String activationCode) throws Exception {
         lpa.downloadProfile(activationCode, dwnProgress);
         resetLpa();
@@ -99,16 +99,16 @@ public class LpaSrc {
         apduChannel = new ApduChannelImpl(cardReaderName);
         lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
 
-        dwnProgress = new DownloadProgress();
-        dwnProgress.setProgressListener(new ProgressListener() {
-            @Override
-            public void onAction(String phase, String step, Double percentage, String message) {
-
-                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
-            }
-        });
-
-        progress = new Progress();
+//        dwnProgress = new DownloadProgress();
+//        dwnProgress.setProgressListener(new ProgressListener() {
+//            @Override
+//            public void onAction(String phase, String step, Double percentage, String message) {
+//
+//                System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
+//            }
+//        });
+//
+//        progress = new Progress();
 
     }
     
@@ -118,5 +118,9 @@ public class LpaSrc {
     
     public String getSMDPAddress(){
         return lpa.getDefaultSMDP();
+    }
+    
+    public void setProgressListener(ProgressListener listener){
+        this.progress.setProgressListener(listener);
     }
 }
