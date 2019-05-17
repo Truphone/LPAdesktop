@@ -19,6 +19,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -55,6 +57,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.text.DefaultEditorKit;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  *
@@ -80,7 +85,7 @@ public class LPAUI extends javax.swing.JFrame {
     }
 
     LpaSrc lpa;
-    String serverAddress = "", ssl_validation = "", keystore_file = "";
+    //String serverAddress = "", ssl_validation = "", keystore_file = "";
     String cardReaderToUse = "", cardReaderFromProps = "";
     private Point initialClick;
 
@@ -96,61 +101,60 @@ public class LPAUI extends javax.swing.JFrame {
         LOG.log(Level.INFO, "STARTING");
 
         //GET SERVER ADDRESS AND KEYSTORE FROM PROPERTIES
-        Properties prop = null;
-        try {
-            prop = Util.readProperties();
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to read configuration\nReason: %s", ex.getMessage()));
-        }
+//        Properties prop = null;
+//        try {
+//            prop = Util.readProperties();
+//        } catch (URISyntaxException ex) {
+//            LOG.log(Level.SEVERE, ex.toString());
+//            Util.showMessageDialog(this, String.format("Failed to read configuration\nReason: %s", ex.getMessage()));
+//        }
 
-        //red properties from file
-        if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file")) && !StringUtils.isEmpty(prop.getProperty("ssl_validation"))) {
-            serverAddress = prop.getProperty("serverAddress");
-            ssl_validation = prop.getProperty("ssl_validation");
-            keystore_file = prop.getProperty("keystore_file");
-
-            if (!StringUtils.isEmpty(prop.getProperty("card_reader"))) {
-                cardReaderFromProps = prop.getProperty("card_reader");
-            }
-        } else {
-            Util.showMessageDialog(this, "Failed to load config\nOne of the following paramters is missing: serverAddress, ssl_validation,keystore_file");
-        }
-
+//        //red properties from file
+//        if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file")) && !StringUtils.isEmpty(prop.getProperty("ssl_validation"))) {
+//            serverAddress = prop.getProperty("serverAddress");
+//            ssl_validation = prop.getProperty("ssl_validation");
+//            keystore_file = prop.getProperty("keystore_file");
+//
+//            if (!StringUtils.isEmpty(prop.getProperty("card_reader"))) {
+//                cardReaderFromProps = prop.getProperty("card_reader");
+//            }
+//        } else {
+//            Util.showMessageDialog(this, "Failed to load config\nOne of the following paramters is missing: serverAddress, ssl_validation,keystore_file");
+//        }
         try {
             refreshReadersList();
         } catch (CardException ex) {
             LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info",ex.getMessage()));
+            Util.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
         }
 
-        if (ssl_validation.toLowerCase().compareTo("true") == 0) {
-            System.setProperty("javax.net.ssl.trustStore", keystore_file);
-        } else {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-
-                    public void checkClientTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-
-                    public void checkServerTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
+//        if (ssl_validation.toLowerCase().compareTo("true") == 0) {
+//            System.setProperty("javax.net.ssl.trustStore", keystore_file);
+//        } else {
+        TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
                 }
-            };
 
-            // Install the all-trusting trust manager
-            try {
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-            } catch (GeneralSecurityException e) {
+                public void checkClientTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+
+                public void checkServerTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
             }
+        };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (GeneralSecurityException e) {
         }
+//        }
 
         lblProgress.setVisible(false);
 
@@ -169,9 +173,19 @@ public class LPAUI extends javax.swing.JFrame {
             Util.setUpMacShortcuts(txtEuiccInfo.getInputMap());
         }
 
-    }
+        //SET APP VERSION ON TITLE BAR
+        String appTitle = "LPA";
+        try {
+            appTitle += " v" + getAPIVersion();
+        } catch (IOException ex) {
+            Logger.getLogger(LPAUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (XmlPullParserException ex) {
+            Logger.getLogger(LPAUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-    
+        lblTitleBar.setText(appTitle);
+
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -205,8 +219,8 @@ public class LPAUI extends javax.swing.JFrame {
         btnSetSMDPAddress = new javax.swing.JButton();
         lblProgress = new javax.swing.JLabel();
         headerPanel = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        lblTitleBar = new javax.swing.JLabel();
+        btnCloseApp = new javax.swing.JButton();
 
         miEnableProfile.setText("Enable");
         miEnableProfile.addActionListener(new java.awt.event.ActionListener() {
@@ -292,29 +306,30 @@ public class LPAUI extends javax.swing.JFrame {
             }
         });
 
-        lblProgress.setIcon(new javax.swing.ImageIcon(getClass().getResource("/wait_small.gif"))); // NOI18N
+        lblProgress.setForeground(new java.awt.Color(0, 50, 63));
+        lblProgress.setIcon(new javax.swing.ImageIcon(getClass().getResource("/wait_2.gif"))); // NOI18N
         lblProgress.setText("Processing");
 
         headerPanel.setBackground(new java.awt.Color(0, 50, 63));
         headerPanel.setToolTipText("");
 
-        jLabel4.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/truphone-brand-small.png"))); // NOI18N
-        jLabel4.setText("LPA");
+        lblTitleBar.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
+        lblTitleBar.setForeground(new java.awt.Color(255, 255, 255));
+        lblTitleBar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/truphone-brand-small.png"))); // NOI18N
+        lblTitleBar.setText("LPA");
 
-        jButton1.setBackground(new java.awt.Color(0, 50, 63));
-        jButton1.setFont(new java.awt.Font("Lucida Grande", 0, 18)); // NOI18N
-        jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("X");
-        jButton1.setBorder(null);
-        jButton1.setBorderPainted(false);
-        jButton1.setBounds(new java.awt.Rectangle(0, 0, 97, 29));
-        jButton1.setContentAreaFilled(false);
-        jButton1.setFocusPainted(false);
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnCloseApp.setBackground(new java.awt.Color(0, 50, 63));
+        btnCloseApp.setFont(new java.awt.Font("Lucida Grande", 0, 18)); // NOI18N
+        btnCloseApp.setForeground(new java.awt.Color(255, 255, 255));
+        btnCloseApp.setText("X");
+        btnCloseApp.setBorder(null);
+        btnCloseApp.setBorderPainted(false);
+        btnCloseApp.setBounds(new java.awt.Rectangle(0, 0, 97, 29));
+        btnCloseApp.setContentAreaFilled(false);
+        btnCloseApp.setFocusPainted(false);
+        btnCloseApp.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnCloseAppActionPerformed(evt);
             }
         });
 
@@ -324,16 +339,16 @@ public class LPAUI extends javax.swing.JFrame {
             headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, headerPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(lblTitleBar, javax.swing.GroupLayout.PREFERRED_SIZE, 292, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnCloseApp, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         headerPanelLayout.setVerticalGroup(
             headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
-                .addComponent(jButton1))
+                .addComponent(lblTitleBar, javax.swing.GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
+                .addComponent(btnCloseApp))
         );
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
@@ -357,17 +372,17 @@ public class LPAUI extends javax.swing.JFrame {
                                 .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(lblProgress)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(jLabel3))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(lblProgress)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
@@ -395,7 +410,9 @@ public class LPAUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAddProfile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(lblProgress, javax.swing.GroupLayout.DEFAULT_SIZE, 29, Short.MAX_VALUE)))
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addComponent(lblProgress)
+                        .addGap(0, 20, Short.MAX_VALUE))))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -406,9 +423,7 @@ public class LPAUI extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
@@ -419,7 +434,7 @@ public class LPAUI extends javax.swing.JFrame {
             refreshReadersList();
         } catch (CardException ex) {
             LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to refresh readers list\nReason: %s\nPlease check the log.",ex.getMessage()));
+            Util.showMessageDialog(this, String.format("Failed to refresh readers list\nReason: %s\nPlease check the log.", ex.getMessage()));
         }
     }//GEN-LAST:event_btnRefreshReadersActionPerformed
 
@@ -519,7 +534,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         if (cmbReaders.getItemCount() > 0) {
             try {
-                lpa = new LpaSrc(serverAddress, (String) cmbReaders.getSelectedItem());
+                lpa = new LpaSrc((String) cmbReaders.getSelectedItem());
             } catch (CardException ex) {
                 LOG.log(Level.SEVERE, ex.toString());
                 //Util.showMessageDialog(this, String.format("Failed to start LPA: %s. Please check the log for more info.", ex.getMessage()));
@@ -533,14 +548,7 @@ public class LPAUI extends javax.swing.JFrame {
         lpa.setProgressListener(new ProgressListener() {
             @Override
             public void onAction(String phase, String step, Double percentage, String message) {
-//                String statusText = step + "-" + message;
-                //lblProgress.setText(statusText);
-                //progressBar.setValue(percentage.intValue() * 100);
-                //progressBar.updateUI();
-//                System.out.println("Phase: " + phase);
-//                System.out.println("Step: " + step);
-//                System.out.println("Percentage: " + percentage.toString());
-//                System.out.println("Message: " + message);
+
             }
         });
 
@@ -567,10 +575,8 @@ public class LPAUI extends javax.swing.JFrame {
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
 
         //String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
-      
-       
-        String activationCode = Util.showInputDialog(this, "Enter activation code","1$rsp.truphone.com$");
-        
+        String activationCode = Util.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
+
         if (activationCode == null) {
             return;
         }
@@ -600,7 +606,7 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAddProfileActionPerformed
 
     private void btnSetSMDPAddressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetSMDPAddressActionPerformed
-       
+
         String address = JOptionPane.showInputDialog(this, "Enter new SMDP+ address");
 
         //lpa.setSMDPAddress(com.truphone.util.Util.ASCIIToHex(address));
@@ -612,9 +618,9 @@ public class LPAUI extends javax.swing.JFrame {
         setProcessing(false);
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnCloseAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseAppActionPerformed
         System.exit(0);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_btnCloseAppActionPerformed
 
     /**
      * @param args the command line arguments
@@ -661,19 +667,19 @@ public class LPAUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddProfile;
+    private javax.swing.JButton btnCloseApp;
     private javax.swing.JButton btnConnect;
     private javax.swing.JButton btnRefreshReaders;
     private javax.swing.JButton btnSetSMDPAddress;
     private javax.swing.JComboBox<String> cmbReaders;
     private javax.swing.JPanel headerPanel;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblProgress;
+    private javax.swing.JLabel lblTitleBar;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuItem miDeleteProfile;
     private javax.swing.JMenuItem miDisableProfile;
@@ -786,7 +792,7 @@ public class LPAUI extends javax.swing.JFrame {
             defaultSmdpAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to get SMDP+ & SMDS addresses\nReason:%s\nCheck the logs for more info",ex.getMessage()));
+            Util.showMessageDialog(this, String.format("Failed to get SMDP+ & SMDS addresses\nReason:%s\nCheck the logs for more info", ex.getMessage()));
         }
 
         sb.append("Root SM-DS: ").append(rootDsAddress).append(System.getProperty("line.separator"));
@@ -806,7 +812,7 @@ public class LPAUI extends javax.swing.JFrame {
         btnAddProfile.setEnabled(!processing);
         cmbReaders.setEditable(!processing);
 
-//            }
+//      }
 //        };
 //        
 //        t.start();
@@ -816,7 +822,6 @@ public class LPAUI extends javax.swing.JFrame {
 //
 //        Util.showMessageDialog(parent, String.format("<html>%s</html>", text));
 //    }
-
     private void setupWindowDragging(JPanel panel) {
         //TO MOVE THE WINDOW WITH NEW BAR
         panel.addMouseListener(new MouseAdapter() {
@@ -846,4 +851,7 @@ public class LPAUI extends javax.swing.JFrame {
         });
     }
 
+    public String getAPIVersion() throws FileNotFoundException, IOException, XmlPullParserException {
+        return getClass().getPackage().getImplementationVersion();
+    }
 }

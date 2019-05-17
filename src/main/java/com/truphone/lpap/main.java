@@ -117,7 +117,7 @@ public class main {
 
         System.setProperty("javax.net.ssl.trustStore", keystore_file);
 
-        LpaSrc lpa = new LpaSrc(serverAddress, cardReaderToUse);
+        LpaSrc lpa = new LpaSrc(cardReaderToUse);
         String eid = lpa.getEID();
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.out.println("+           Local Profile Assistant               +");

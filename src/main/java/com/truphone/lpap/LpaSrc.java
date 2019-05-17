@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.smartcardio.CardException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -24,27 +26,28 @@ import org.apache.commons.codec.binary.Hex;
  * @author amilcar.pereira
  */
 public class LpaSrc {
-
+    private static java.util.logging.Logger LOG = Logger.getLogger(LpaSrc.class.getName());
     LocalProfileAssistantImpl lpa;
     DownloadProgress dwnProgress;
     Progress progress;
     ApduChannelImpl apduChannel;
-    String serverAddress;
+
     String cardReaderName;
 
-    public LpaSrc(String serverAddress, String cardReader) throws CardException {
-        this.serverAddress = serverAddress;
+    public LpaSrc(String cardReader) throws CardException {
+        
+        
         this.cardReaderName = cardReader;
         //START THE LPA
         apduChannel = new ApduChannelImpl(cardReader);
 
-        lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
+        lpa = new LocalProfileAssistantImpl(apduChannel);
 
         dwnProgress = new DownloadProgress();
 //        dwnProgress.setProgressListener(new ProgressListener() {
 //            @Override
 //            public void onAction(String phase, String step, Double percentage, String message) {
-//
+//                LOG.log(Level.FINE, message);
 //                //System.out.println(phase + "|" + step + "|" + percentage.toString() + "|" + message);
 //            }
 //        });
@@ -97,7 +100,7 @@ public class LpaSrc {
         apduChannel.close();
 
         apduChannel = new ApduChannelImpl(cardReaderName);
-        lpa = new LocalProfileAssistantImpl(apduChannel, serverAddress);
+        lpa = new LocalProfileAssistantImpl(apduChannel);
 
 //        dwnProgress = new DownloadProgress();
 //        dwnProgress.setProgressListener(new ProgressListener() {
