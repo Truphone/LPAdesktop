@@ -19,13 +19,17 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -60,6 +64,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import sun.security.util.Length;
 
 /**
  *
@@ -70,20 +75,32 @@ public class LPAUI extends javax.swing.JFrame {
     private static java.util.logging.Logger LOG = null;
     private WaitingDialog waitDlg;
 
-    static {
-//        InputStream stream = main.class.getClassLoader().
-//                getResourceAsStream("logging.properties");
-        //try {
-        System.setProperty("java.util.logging.config.file",
-                "logging.properties");
-        //LogManager.getLogManager().readConfiguration(stream);
-        LOG = Logger.getLogger(main.class.getName());
-
-        //} catch (IOException e) {
-        //    e.printStackTrace();
-        //}
-    }
-
+//    static {
+//        File propFile = new File("./logging.properties");
+//
+//        if (propFile.exists()) {
+//            System.setProperty("java.util.logging.config.file",
+//                    "logging.properties");
+//        } else {
+////            InputStream stream = null;
+////            if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+////                stream = LPAUI.class.getClassLoader().
+////                        getResourceAsStream("logging_mac.properties");
+////            } else {
+////                stream = LPAUI.class.getClassLoader().
+////                        getResourceAsStream("logging.properties");
+////            }
+//            Util.showMessageDialog(this, "Couldn't find loggiing configuration");
+//
+//           
+//        }
+//
+//        LOG = Logger.getLogger(LPAUI.class.getName());
+//
+//        //} catch (IOException e) {
+//        //    e.printStackTrace();
+//        //}
+//    }
     LpaSrc lpa;
     //String serverAddress = "", ssl_validation = "", keystore_file = "";
     String cardReaderToUse = "", cardReaderFromProps = "";
@@ -93,6 +110,47 @@ public class LPAUI extends javax.swing.JFrame {
      * Creates new form LPAUI
      */
     public LPAUI() {
+
+        String loggingConfigFile = "logging.properties";
+
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            loggingConfigFile = "contents/resources/logging.properties";
+        } else {
+            loggingConfigFile = "config/logging.properties";
+        }
+
+        File propFile = new File(loggingConfigFile);
+
+        if (propFile.exists()) {
+            System.setProperty("java.util.logging.config.file",
+                    loggingConfigFile);
+        } else {
+            Util.showMessageDialog(this, "Couldn't find loggiing configuration");
+            System.exit(0);
+        }
+
+        LOG = Logger.getLogger(LPAUI.class.getName());
+
+        LocalDateTime today = LocalDateTime.now();
+
+        if (today.getYear() >= 2019 && today.getMonthValue() > 5) {
+            // TODO add your handling code here:
+            StringBuilder sb = new StringBuilder();
+
+            String version = getAppVersion();
+            if (version != null && version.length() > 0) {
+                version = String.format("(V%s) ", version);
+            } else {
+                version = "";
+            }
+
+            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
+            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
+
+            Util.showMessageDialog(this, sb.toString());
+            System.exit(0);
+        }
+
         initComponents();
 
         LogStub.getInstance().setAndroidLog(true);
@@ -108,7 +166,6 @@ public class LPAUI extends javax.swing.JFrame {
 //            LOG.log(Level.SEVERE, ex.toString());
 //            Util.showMessageDialog(this, String.format("Failed to read configuration\nReason: %s", ex.getMessage()));
 //        }
-
 //        //red properties from file
 //        if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file")) && !StringUtils.isEmpty(prop.getProperty("ssl_validation"))) {
 //            serverAddress = prop.getProperty("serverAddress");
@@ -175,12 +232,10 @@ public class LPAUI extends javax.swing.JFrame {
 
         //SET APP VERSION ON TITLE BAR
         String appTitle = "LPA";
-        try {
-            appTitle += " v" + getAPIVersion();
-        } catch (IOException ex) {
-            Logger.getLogger(LPAUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (XmlPullParserException ex) {
-            Logger.getLogger(LPAUI.class.getName()).log(Level.SEVERE, null, ex);
+
+        String version = getAppVersion();
+        if (version != null && version.length() > 0) {
+            appTitle += " v" + version;
         }
 
         lblTitleBar.setText(appTitle);
@@ -221,6 +276,7 @@ public class LPAUI extends javax.swing.JFrame {
         headerPanel = new javax.swing.JPanel();
         lblTitleBar = new javax.swing.JLabel();
         btnCloseApp = new javax.swing.JButton();
+        btnCloseApp2 = new javax.swing.JButton();
 
         miEnableProfile.setText("Enable");
         miEnableProfile.addActionListener(new java.awt.event.ActionListener() {
@@ -333,6 +389,21 @@ public class LPAUI extends javax.swing.JFrame {
             }
         });
 
+        btnCloseApp2.setBackground(new java.awt.Color(0, 50, 63));
+        btnCloseApp2.setFont(new java.awt.Font("Lucida Grande", 0, 18)); // NOI18N
+        btnCloseApp2.setForeground(new java.awt.Color(255, 255, 255));
+        btnCloseApp2.setText("?");
+        btnCloseApp2.setBorder(null);
+        btnCloseApp2.setBorderPainted(false);
+        btnCloseApp2.setBounds(new java.awt.Rectangle(0, 0, 97, 29));
+        btnCloseApp2.setContentAreaFilled(false);
+        btnCloseApp2.setFocusPainted(false);
+        btnCloseApp2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseApp2ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout headerPanelLayout = new javax.swing.GroupLayout(headerPanel);
         headerPanel.setLayout(headerPanelLayout);
         headerPanelLayout.setHorizontalGroup(
@@ -341,14 +412,17 @@ public class LPAUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(lblTitleBar, javax.swing.GroupLayout.PREFERRED_SIZE, 292, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnCloseApp2, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(btnCloseApp, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         headerPanelLayout.setVerticalGroup(
             headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(lblTitleBar, javax.swing.GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
-                .addComponent(btnCloseApp))
+                .addComponent(lblTitleBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnCloseApp)
+                .addComponent(btnCloseApp2))
         );
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
@@ -376,11 +450,10 @@ public class LPAUI extends javax.swing.JFrame {
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
-                            .addComponent(jLabel3))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addComponent(lblProgress)
+                            .addComponent(jLabel3)
+                            .addGroup(mainPanelLayout.createSequentialGroup()
+                                .addGap(20, 20, 20)
+                                .addComponent(lblProgress)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -392,10 +465,11 @@ public class LPAUI extends javax.swing.JFrame {
                 .addGap(29, 29, 29)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cmbReaders, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2)
-                            .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(cmbReaders, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel2)))
                         .addGap(14, 14, 14)
                         .addComponent(jLabel1))
                     .addComponent(btnConnect))
@@ -408,11 +482,10 @@ public class LPAUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAddProfile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addComponent(lblProgress)
-                        .addGap(0, 20, Short.MAX_VALUE))))
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblProgress)
+                    .addComponent(btnAddProfile))
+                .addGap(0, 13, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -622,52 +695,28 @@ public class LPAUI extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_btnCloseAppActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+    private void btnCloseApp2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseApp2ActionPerformed
+        // TODO add your handling code here:
+        StringBuilder sb = new StringBuilder();
+        sb.append("Truphone LPAdesktop").append(System.getProperty("line.separator"));
 
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(LPAUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(LPAUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(LPAUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(LPAUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        String version = getAppVersion();
+        if (version != null && version.length() > 0) {
+            sb.append("Version ").append(version).append(System.getProperty("line.separator"));
         }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new LPAUI().setVisible(true);
-            }
-        });
-    }
+        sb.append("Copyright (c) 2019 Truphone").append(System.getProperty("line.separator"));
+        sb.append("This application shall not be used or distributed without prior permission from Truphone.");
+
+        Util.showMessageDialog(this, sb.toString());
+
+    }//GEN-LAST:event_btnCloseApp2ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddProfile;
     private javax.swing.JButton btnCloseApp;
+    private javax.swing.JButton btnCloseApp2;
     private javax.swing.JButton btnConnect;
     private javax.swing.JButton btnRefreshReaders;
     private javax.swing.JButton btnSetSMDPAddress;
@@ -851,7 +900,13 @@ public class LPAUI extends javax.swing.JFrame {
         });
     }
 
-    public String getAPIVersion() throws FileNotFoundException, IOException, XmlPullParserException {
+    public String getAppVersion() {
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            //LMavenXpp3Reader reader = new MavenXpp3Reader();
+            //Model model = reader.read(new FileReader("pom.xml"));
+            //return model.getVersion();
+            getClass().getPackage().getImplementationVersion();
+        }
         return getClass().getPackage().getImplementationVersion();
     }
 }

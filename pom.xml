@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.truphone</groupId>
     <artifactId>LPA</artifactId>
-    <version>0.1.2.8</version>
+    <version>0.1.2.9</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -49,6 +49,11 @@
             <version>3.3.9</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>net.sf.proguard</groupId>
+            <artifactId>proguard</artifactId>
+            <version>4.4</version>
+        </dependency>
     </dependencies>
     <name>LPASCR</name>
     <build>
@@ -65,7 +70,8 @@
                             <goal> copy-resources </goal>
                         </goals>
                         <configuration>
-                            <outputDirectory> ${basedir}/target/TruLPA_${version}/ </outputDirectory>
+                            <outputDirectory> ${basedir}/target/TruLPA_${version}/config </outputDirectory>
+                            
                             <resources>
                                 <!--                                <resource>
                                     <directory> ${basedir}/src </directory>
@@ -74,16 +80,18 @@
                                     </includes>
                                 </resource>-->
                                 <resource>
-                                    <directory> ${basedir}/src/main/resources </directory>
+                                    <directory> ${basedir}/src/main/resources/windows </directory>
                                     <includes>
                                         <include> logging.properties</include>
                                     </includes>
                                 </resource>
                             </resources>
+                            
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+          
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
@@ -101,15 +109,39 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.truphone.lpap.LPAUI</mainClass>
+                                    <mainClass>com.truphone.lpap.mainUI</mainClass>
                                     <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                 </manifest>
                             </archive>
+                           
+
                         </configuration>
                     </execution>
+                     
                 </executions>
+               
             </plugin>
-            
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <options>
+                        <option>-allowaccessmodification</option>
+                        <option>-keep public class com.truphone.lpap.mainUI { *; }</option>
+                    </options>
+                    <libs>
+                        <lib>${java.home}/lib/rt.jar</lib>
+                    </libs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
@@ -127,7 +159,7 @@
                             <icon>${basedir}/src/main/resources/tru_logo.ico</icon>
                             <errTitle>LPA</errTitle>
                             <classPath>
-                                <mainClass>com.truphone.lpap.LPAUI</mainClass>
+                                <mainClass>com.truphone.lpap.mainUI</mainClass>
                                 <addDependencies>true</addDependencies>
                                 <preCp>anything</preCp>
                             </classPath>
@@ -158,13 +190,15 @@
                 <artifactId>appbundle-maven-plugin</artifactId>
                 <version>1.2.0</version>
                 <configuration>
-                    <mainClass>com.truphone.lpap.LPAUI</mainClass>
+                    <mainClass>com.truphone.lpap.mainUI</mainClass>
+                    <jrePath>/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk</jrePath>
                     <generateDiskImageFile>true</generateDiskImageFile>
                     <bundleName>Truphone LPA</bundleName>
                     <iconFile>tru_logo.icns</iconFile>
+                    
                     <additionalResources>
                         <fileSet>
-                            <directory>${basedir}/src/main/resources</directory>
+                            <directory>${basedir}/src/main/resources/mac</directory>
                             <includes>
                                 <include>logging.properties</include>
                             </includes>
