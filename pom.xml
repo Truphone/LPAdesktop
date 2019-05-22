@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.truphone</groupId>
     <artifactId>LPA</artifactId>
-    <version>0.1.2.9</version>
+    <version>0.1.2.10</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -166,9 +166,9 @@
                             
                             <jre>
                                 <minVersion>1.8.0</minVersion>
-                                <opts>
+<!--                                <opts>
                                     <opt>-Djava.endorsed.dirs=./endorsed</opt>
-                                </opts>
+                                </opts>-->
                             </jre>
                             <versionInfo>
                                 <fileVersion>${version}</fileVersion>

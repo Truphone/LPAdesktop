@@ -75,32 +75,6 @@ public class LPAUI extends javax.swing.JFrame {
     private static java.util.logging.Logger LOG = null;
     private WaitingDialog waitDlg;
 
-//    static {
-//        File propFile = new File("./logging.properties");
-//
-//        if (propFile.exists()) {
-//            System.setProperty("java.util.logging.config.file",
-//                    "logging.properties");
-//        } else {
-////            InputStream stream = null;
-////            if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-////                stream = LPAUI.class.getClassLoader().
-////                        getResourceAsStream("logging_mac.properties");
-////            } else {
-////                stream = LPAUI.class.getClassLoader().
-////                        getResourceAsStream("logging.properties");
-////            }
-//            Util.showMessageDialog(this, "Couldn't find loggiing configuration");
-//
-//           
-//        }
-//
-//        LOG = Logger.getLogger(LPAUI.class.getName());
-//
-//        //} catch (IOException e) {
-//        //    e.printStackTrace();
-//        //}
-//    }
     LpaSrc lpa;
     //String serverAddress = "", ssl_validation = "", keystore_file = "";
     String cardReaderToUse = "", cardReaderFromProps = "";
@@ -110,7 +84,7 @@ public class LPAUI extends javax.swing.JFrame {
      * Creates new form LPAUI
      */
     public LPAUI() {
-
+                             
         String loggingConfigFile = "logging.properties";
 
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
@@ -158,26 +132,6 @@ public class LPAUI extends javax.swing.JFrame {
         LogStub.getInstance().setLogLevel(Level.ALL);
         LOG.log(Level.INFO, "STARTING");
 
-        //GET SERVER ADDRESS AND KEYSTORE FROM PROPERTIES
-//        Properties prop = null;
-//        try {
-//            prop = Util.readProperties();
-//        } catch (URISyntaxException ex) {
-//            LOG.log(Level.SEVERE, ex.toString());
-//            Util.showMessageDialog(this, String.format("Failed to read configuration\nReason: %s", ex.getMessage()));
-//        }
-//        //red properties from file
-//        if (prop != null && !StringUtils.isEmpty(prop.getProperty("serverAddress")) && !StringUtils.isEmpty(prop.getProperty("keystore_file")) && !StringUtils.isEmpty(prop.getProperty("ssl_validation"))) {
-//            serverAddress = prop.getProperty("serverAddress");
-//            ssl_validation = prop.getProperty("ssl_validation");
-//            keystore_file = prop.getProperty("keystore_file");
-//
-//            if (!StringUtils.isEmpty(prop.getProperty("card_reader"))) {
-//                cardReaderFromProps = prop.getProperty("card_reader");
-//            }
-//        } else {
-//            Util.showMessageDialog(this, "Failed to load config\nOne of the following paramters is missing: serverAddress, ssl_validation,keystore_file");
-//        }
         try {
             refreshReadersList();
         } catch (CardException ex) {
@@ -185,9 +139,7 @@ public class LPAUI extends javax.swing.JFrame {
             Util.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
         }
 
-//        if (ssl_validation.toLowerCase().compareTo("true") == 0) {
-//            System.setProperty("javax.net.ssl.trustStore", keystore_file);
-//        } else {
+        
         TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
                 public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -239,7 +191,10 @@ public class LPAUI extends javax.swing.JFrame {
         }
 
         lblTitleBar.setText(appTitle);
+        
+        
 
+        
     }
 
     /**
@@ -277,6 +232,7 @@ public class LPAUI extends javax.swing.JFrame {
         lblTitleBar = new javax.swing.JLabel();
         btnCloseApp = new javax.swing.JButton();
         btnCloseApp2 = new javax.swing.JButton();
+        btnHandleNotifications = new javax.swing.JButton();
 
         miEnableProfile.setText("Enable");
         miEnableProfile.addActionListener(new java.awt.event.ActionListener() {
@@ -307,6 +263,14 @@ public class LPAUI extends javax.swing.JFrame {
         setBackground(new java.awt.Color(255, 255, 255));
         setUndecorated(true);
         setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -425,6 +389,15 @@ public class LPAUI extends javax.swing.JFrame {
                 .addComponent(btnCloseApp2))
         );
 
+        btnHandleNotifications.setForeground(new java.awt.Color(0, 50, 63));
+        btnHandleNotifications.setText("Process Notifications");
+        btnHandleNotifications.setEnabled(false);
+        btnHandleNotifications.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHandleNotificationsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
@@ -437,7 +410,10 @@ public class LPAUI extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                         .addGap(0, 256, Short.MAX_VALUE)
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnSetSMDPAddress, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                                .addComponent(btnHandleNotifications)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnSetSMDPAddress))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                                 .addComponent(jLabel2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -476,8 +452,10 @@ public class LPAUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnSetSMDPAddress)
-                .addGap(28, 28, 28)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnSetSMDPAddress)
+                    .addComponent(btnHandleNotifications))
+                .addGap(26, 26, 26)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -485,7 +463,7 @@ public class LPAUI extends javax.swing.JFrame {
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lblProgress)
                     .addComponent(btnAddProfile))
-                .addGap(0, 13, Short.MAX_VALUE))
+                .addGap(0, 10, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -607,6 +585,8 @@ public class LPAUI extends javax.swing.JFrame {
 
         if (cmbReaders.getItemCount() > 0) {
             try {
+                if(lpa!=null)
+                    lpa.disconnect();
                 lpa = new LpaSrc((String) cmbReaders.getSelectedItem());
             } catch (CardException ex) {
                 LOG.log(Level.SEVERE, ex.toString());
@@ -692,6 +672,7 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
 
     private void btnCloseAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseAppActionPerformed
+        lpa.disconnect();
         System.exit(0);
     }//GEN-LAST:event_btnCloseAppActionPerformed
 
@@ -712,12 +693,48 @@ public class LPAUI extends javax.swing.JFrame {
 
     }//GEN-LAST:event_btnCloseApp2ActionPerformed
 
+    private void btnHandleNotificationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHandleNotificationsActionPerformed
+        
+          SwingWorker sw = new SwingWorker() {
+            @Override
+
+            protected Object doInBackground() throws Exception {
+                setProcessing(true);
+                try {
+                    lpa.processPendingNotificaitons();
+
+                } catch (Exception ex) {
+                    LOG.log(Level.SEVERE, ex.toString());
+                    
+                    Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
+                }
+                setProcessing(false);
+
+                return null;
+            }
+        };
+
+        sw.execute();
+        
+        
+        
+    }//GEN-LAST:event_btnHandleNotificationsActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+       
+    }//GEN-LAST:event_formWindowClosing
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        lpa.disconnect();
+    }//GEN-LAST:event_formWindowClosed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddProfile;
     private javax.swing.JButton btnCloseApp;
     private javax.swing.JButton btnCloseApp2;
     private javax.swing.JButton btnConnect;
+    private javax.swing.JButton btnHandleNotifications;
     private javax.swing.JButton btnRefreshReaders;
     private javax.swing.JButton btnSetSMDPAddress;
     private javax.swing.JComboBox<String> cmbReaders;
@@ -860,6 +877,8 @@ public class LPAUI extends javax.swing.JFrame {
         btnSetSMDPAddress.setEnabled(!processing);
         btnAddProfile.setEnabled(!processing);
         cmbReaders.setEditable(!processing);
+        btnHandleNotifications.setEnabled(!processing);
+                
 
 //      }
 //        };

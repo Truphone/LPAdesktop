@@ -24,13 +24,15 @@ import javax.smartcardio.TerminalFactory;
  *
  * @author amilcar.pereira
  */
-public class ApduChannelImpl implements ApduChannel{
-    
-    
-    private CardChannel basicChannel;//, logicalChannel;
+public class ApduChannelImpl implements ApduChannel {
+
+    private static java.util.logging.Logger LOG = Logger.getLogger(ApduChannelImpl.class.getName());;
+
+    private CardChannel basicChannel;
+    private CardChannel logicalChannel;
     ApduTransmittedListener apduTransmittedListener;
-    
-    public ApduChannelImpl(String cardReader) throws CardException{
+
+    public ApduChannelImpl(String cardReader) throws CardException {
         //open channel to the card
         TerminalFactory terminalFactory = TerminalFactory.getDefault();
         CardTerminals cardTerminals = terminalFactory.terminals();
@@ -39,70 +41,85 @@ public class ApduChannelImpl implements ApduChannel{
         Card card = cardTerminal.connect("T=0");
         basicChannel = card.getBasicChannel();
         
+        
         ResponseAPDU responseApdu;
         byte[] apdu;
-        
+
+        //AP ADDDED THIS STATUS COMMAND
         //send terminal capabilities
-        System.out.println("Send Terminal Capabilities");
+        LOG.log(Level.INFO,("Send Terminal Capabilities"));
         apdu = hexStringToByteArray("80AA00000AA9088100820101830107");
         
+        LOG.log(Level.INFO, byteArrayToHex(apdu));
         responseApdu = basicChannel.transmit(new CommandAPDU(apdu));
-        System.out.println(String.format("0x%04X", responseApdu.getSW()));
-        
-        System.out.println("Open Logical Channel and Select ISD-R");
-        //logicalChannel = card.openLogicalChannel();
-        
+        LOG.log(Level.INFO,(String.format("0x%04X", responseApdu.getSW())));
+
+        LOG.log(Level.INFO,("Open Logical Channel and Select ISD-R"));
+        logicalChannel = card.openLogicalChannel();
+
         apdu = hexStringToByteArray("00A4040010A0000005591010FFFFFFFF8900000100");
         
-        responseApdu = basicChannel.transmit(new CommandAPDU(apdu));
-        System.out.println(String.format("0x%04X", responseApdu.getSW()));
+        LOG.log(Level.INFO, byteArrayToHex(apdu));
+        responseApdu = logicalChannel.transmit(new CommandAPDU(apdu));
+        LOG.log(Level.INFO,(String.format("0x%04X", responseApdu.getSW())));
         //transmitAPDU("00A4040010A0000005591010FFFFFFFF8900000100");
-        
+
+      
+        //Send Status
+        LOG.log(Level.INFO,("Send Status"));
+        apdu = hexStringToByteArray("80F2000C00");
+        LOG.log(Level.INFO, byteArrayToHex(apdu));
+        responseApdu = logicalChannel.transmit(new CommandAPDU(apdu));
+        LOG.log(Level.INFO,(String.format("0x%04X", responseApdu.getSW())));
+
     }
-    
+
     @Override
     public String transmitAPDU(String apdu) {
-        apdu="80" + apdu.substring(2);
-        
+        //apdu = "80" + apdu.substring(2);
+        apdu = "8" + logicalChannel.getChannelNumber() + apdu.substring(2);
+
         ResponseAPDU responseApdu;
         byte[] bApdu;
-        
+
         //send terminal capabilities
         bApdu = hexStringToByteArray(apdu.trim().replaceAll(" ", ""));
         try {
-            responseApdu = basicChannel.transmit(new CommandAPDU(bApdu));
-            
-            if(apduTransmittedListener!=null)
+            responseApdu = logicalChannel.transmit(new CommandAPDU(bApdu));
+
+            if (apduTransmittedListener != null) {
                 apduTransmittedListener.onApduTransmitted();
-            
+            }
+
         } catch (CardException ex) {
-            System.out.println(ex.toString());
+            LOG.log(Level.INFO,(ex.toString()));
             return "";
         }
-        
+
         return byteArrayToHex(responseApdu.getData()) + String.format("%04X", responseApdu.getSW());
     }
 
     @Override
     public String transmitAPDUS(List<String> apdus) {
-        String result="";
-        
+        String result = "";
+
         for (String apdu : apdus) {
-            System.out.println("APDU:" + apdu);
+            LOG.log(Level.INFO,("APDU:" + apdu));
             result = transmitAPDU(apdu);
-            
+
             //if has more than 4 chars for SW, then it contains data. 
-            if(result.length()>4)
+            if (result.length() > 4) {
                 return result;
-            
-            System.out.println("Response:" +result);
+            }
+
+            LOG.log(Level.INFO,("Response:" + result));
         }
         return result;
     }
 
     @Override
     public void sendStatus() {
-        
+
     }
 
     @Override
@@ -114,14 +131,14 @@ public class ApduChannelImpl implements ApduChannel{
     public void removeApduTransmittedListener(ApduTransmittedListener apduTransmittedListener) {
         this.apduTransmittedListener = null;
     }
-    
-    public void close() throws CardException
-    {
+
+    public void close() throws CardException {
         //logicalChannel.close();
         basicChannel.getCard().disconnect(true);
+        
     }
-    
-     public static String byteArrayToHex(byte[] bytes) {
+
+    public static String byteArrayToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
 
         for (byte b : bytes) {
@@ -129,5 +146,5 @@ public class ApduChannelImpl implements ApduChannel{
         }
         return sb.toString();
     }
-    
+
 }

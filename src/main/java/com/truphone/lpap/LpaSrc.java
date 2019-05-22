@@ -126,4 +126,16 @@ public class LpaSrc {
     public void setProgressListener(ProgressListener listener){
         this.progress.setProgressListener(listener);
     }
+    
+    public void disconnect() {
+        try{
+            apduChannel.close();
+            
+        }catch(CardException ex){
+           LOG.warning("Failed to close ApduChannel. " + ex.getMessage());
+        }
+        
+        lpa=null;
+        
+    }
 }
