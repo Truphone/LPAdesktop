@@ -88,7 +88,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         String loggingConfigFile = "logging.properties";
 
-        //TODO: UNCOMMENT THIS. IT WAS ONLY FOR DEBUG PURPOSES
+
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
             loggingConfigFile = "contents/java/lib/logging.properties";
         } else {
@@ -548,6 +548,7 @@ public class LPAUI extends javax.swing.JFrame {
         String iccid = (String) tblProfiles.getValueAt(selectedRow, 0);
         String profileName = (String) tblProfiles.getValueAt(selectedRow, 3);
         String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
+        
 
         if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 
@@ -556,7 +557,8 @@ public class LPAUI extends javax.swing.JFrame {
                 protected Object doInBackground() throws Exception {
                     setProcessing(true);
                     try {
-
+                        
+                        lpa.disableProfile(isdp_aid);
                         lpa.deleteProfile(isdp_aid);
 
                     } catch (Exception ex) {
