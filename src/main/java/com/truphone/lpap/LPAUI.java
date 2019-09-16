@@ -59,6 +59,7 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.DefaultEditorKit;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
@@ -84,11 +85,12 @@ public class LPAUI extends javax.swing.JFrame {
      * Creates new form LPAUI
      */
     public LPAUI() {
-                             
+
         String loggingConfigFile = "logging.properties";
 
+        //TODO: UNCOMMENT THIS. IT WAS ONLY FOR DEBUG PURPOSES
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-            loggingConfigFile = "contents/resources/logging.properties";
+            loggingConfigFile = "contents/java/lib/logging.properties";
         } else {
             loggingConfigFile = "config/logging.properties";
         }
@@ -99,32 +101,30 @@ public class LPAUI extends javax.swing.JFrame {
             System.setProperty("java.util.logging.config.file",
                     loggingConfigFile);
         } else {
-            Util.showMessageDialog(this, "Couldn't find loggiing configuration");
+            Util.showMessageDialog(this, "Couldn't find logging configuration");
             System.exit(0);
         }
-
         LOG = Logger.getLogger(LPAUI.class.getName());
 
         LocalDateTime today = LocalDateTime.now();
 
-        if (today.getYear() >= 2019 && today.getMonthValue() > 5) {
-            // TODO add your handling code here:
-            StringBuilder sb = new StringBuilder();
-
-            String version = getAppVersion();
-            if (version != null && version.length() > 0) {
-                version = String.format("(V%s) ", version);
-            } else {
-                version = "";
-            }
-
-            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
-            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
-
-            Util.showMessageDialog(this, sb.toString());
-            System.exit(0);
-        }
-
+//        if (today.getYear() >= 2019 && today.getMonthValue() > 12) {
+//            // TODO add your handling code here:
+//            StringBuilder sb = new StringBuilder();
+//
+//            String version = getAppVersion();
+//            if (version != null && version.length() > 0) {
+//                version = String.format("(V%s) ", version);
+//            } else {
+//                version = "";
+//            }
+//
+//            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
+//            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
+//
+//            Util.showMessageDialog(this, sb.toString());
+//            System.exit(0);
+//        }
         initComponents();
 
         LogStub.getInstance().setAndroidLog(true);
@@ -139,7 +139,6 @@ public class LPAUI extends javax.swing.JFrame {
             Util.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
         }
 
-        
         TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
                 public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -191,10 +190,7 @@ public class LPAUI extends javax.swing.JFrame {
         }
 
         lblTitleBar.setText(appTitle);
-        
-        
 
-        
     }
 
     /**
@@ -585,8 +581,9 @@ public class LPAUI extends javax.swing.JFrame {
 
         if (cmbReaders.getItemCount() > 0) {
             try {
-                if(lpa!=null)
+                if (lpa != null) {
                     lpa.disconnect();
+                }
                 lpa = new LpaSrc((String) cmbReaders.getSelectedItem());
             } catch (CardException ex) {
                 LOG.log(Level.SEVERE, ex.toString());
@@ -608,9 +605,17 @@ public class LPAUI extends javax.swing.JFrame {
         SwingWorker sw = new SwingWorker() {
             @Override
             protected Object doInBackground() throws Exception {
+
                 setProcessing(true);
-                listProfiles();
-                updateEuiccInfo();
+
+                try {
+                    listProfiles();
+                    updateEuiccInfo();
+                } catch (Exception ex) {
+                    LOG.log(Level.WARNING, ex.toString());
+                    Util.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
+                }
+
                 setProcessing(false);
 
                 btnAddProfile.setEnabled(true);
@@ -628,11 +633,14 @@ public class LPAUI extends javax.swing.JFrame {
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
 
         //String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
-        String activationCode = Util.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
+        //String activationCode = Util.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
+        String matchingId = Util.showInputDialog(this, "Enter matchingId", "");
 
-        if (activationCode == null) {
+        if (matchingId == null) {
             return;
         }
+
+        String activationCode = "1$rsp.truphone.com$" + matchingId;
 
         SwingWorker sw = new SwingWorker() {
             @Override
@@ -666,20 +674,30 @@ public class LPAUI extends javax.swing.JFrame {
         setProcessing(true);
 
         lpa.setSMDPAddress(address);
+        
+        try{
         updateEuiccInfo();
-
+        }catch(DecoderException | IOException ex){
+            LOG.log(Level.WARNING, ex.toString());
+            Util.showMessageDialog(null, "Failed to read Euicc Info");
+        }
+        
         setProcessing(false);
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
 
     private void btnCloseAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseAppActionPerformed
-        lpa.disconnect();
+        try {
+            lpa.disconnect();
+        } catch (Exception ex) {
+            //nothing to do
+        }
         System.exit(0);
     }//GEN-LAST:event_btnCloseAppActionPerformed
 
     private void btnCloseApp2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseApp2ActionPerformed
         // TODO add your handling code here:
         StringBuilder sb = new StringBuilder();
-        sb.append("Truphone LPAdesktop").append(System.getProperty("line.separator"));
+        sb.append("Truphone LPAdesktop (Truphone SM-DP+ only)").append(System.getProperty("line.separator"));
 
         String version = getAppVersion();
         if (version != null && version.length() > 0) {
@@ -694,8 +712,8 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCloseApp2ActionPerformed
 
     private void btnHandleNotificationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHandleNotificationsActionPerformed
-        
-          SwingWorker sw = new SwingWorker() {
+
+        SwingWorker sw = new SwingWorker() {
             @Override
 
             protected Object doInBackground() throws Exception {
@@ -705,7 +723,7 @@ public class LPAUI extends javax.swing.JFrame {
 
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, ex.toString());
-                    
+
                     Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                 }
                 setProcessing(false);
@@ -715,13 +733,12 @@ public class LPAUI extends javax.swing.JFrame {
         };
 
         sw.execute();
-        
-        
-        
+
+
     }//GEN-LAST:event_btnHandleNotificationsActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-       
+
     }//GEN-LAST:event_formWindowClosing
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
@@ -770,80 +787,80 @@ public class LPAUI extends javax.swing.JFrame {
     }
 
     private void listProfiles() {
-        try {
+//        try {
 
-            List<Map<String, String>> profiles = lpa.getProfiles();
+        List<Map<String, String>> profiles = lpa.getProfiles();
 
-            DefaultTableModel model = new DefaultTableModel();
+        DefaultTableModel model = new DefaultTableModel();
 
-            model.addColumn("Iccid");
-            model.addColumn("Name");
-            model.addColumn("State");
-            model.addColumn("Spn");
-            model.addColumn("Aid");
-            model.addColumn("Class");
+        model.addColumn("Iccid");
+        model.addColumn("Name");
+        model.addColumn("State");
+        model.addColumn("Spn");
+        model.addColumn("Aid");
+        model.addColumn("Class");
 
-            for (Map<String, String> profile : profiles) {
-                String[] fields = new String[profile.size()];
+        for (Map<String, String> profile : profiles) {
+            String[] fields = new String[profile.size()];
 
-                if (profile.containsKey("ICCID")) {
-                    String iccidUnswapped = Util.swapNibblesOnString(profile.get("ICCID"));
-                    fields[0] = iccidUnswapped.toLowerCase().charAt(19) == 'f' ? iccidUnswapped.substring(0, 19) : iccidUnswapped.substring(0, 20);
-
-                }
-
-                if (profile.containsKey("NAME")) {
-                    fields[1] = profile.get("NAME");
-                }
-
-                if (profile.containsKey("PROFILE_STATE")) {
-                    fields[2] = profile.get("PROFILE_STATE").compareTo("1") == 0 ? "Enabled" : "Disabled";
-
-                }
-
-                if (profile.containsKey("PROVIDER_NAME")) {
-                    fields[3] = profile.get("PROVIDER_NAME");
-                }
-
-                if (profile.containsKey("ISDP_AID")) {
-                    fields[4] = profile.get("ISDP_AID");
-                }
-
-                if (profile.containsKey("PROFILE_CLASS")) {
-                    String profileClass = profile.get("PROFILE_CLASS");
-                    if (profileClass.compareTo("0") == 0) {
-                        fields[5] = "Test";
-                    } else if (profileClass.compareTo("1") == 0) {
-                        fields[5] = "Provisioning";
-                    } else if (profileClass.compareTo("2") == 0) {
-                        fields[5] = "Operational";
-                    }
-
-                }
-
-                model.addRow(fields);
+            if (profile.containsKey("ICCID")) {
+                String iccidUnswapped = Util.swapNibblesOnString(profile.get("ICCID"));
+                fields[0] = iccidUnswapped.toLowerCase().charAt(19) == 'f' ? iccidUnswapped.substring(0, 19) : iccidUnswapped.substring(0, 20);
 
             }
 
-            tblProfiles.setModel(model);
-            if (model.getRowCount() > 0) {
-                tblProfiles.setRowSelectionInterval(0, 0);
+            if (profile.containsKey("NAME")) {
+                fields[1] = profile.get("NAME");
             }
 
-            tblProfiles.getColumnModel().getColumn(0).setPreferredWidth(130);
+            if (profile.containsKey("PROFILE_STATE")) {
+                fields[2] = profile.get("PROFILE_STATE").compareTo("1") == 0 ? "Enabled" : "Disabled";
+
+            }
+
+            if (profile.containsKey("PROVIDER_NAME")) {
+                fields[3] = profile.get("PROVIDER_NAME");
+            }
+
+            if (profile.containsKey("ISDP_AID")) {
+                fields[4] = profile.get("ISDP_AID");
+            }
+
+            if (profile.containsKey("PROFILE_CLASS")) {
+                String profileClass = profile.get("PROFILE_CLASS");
+                if (profileClass.compareTo("0") == 0) {
+                    fields[5] = "Test";
+                } else if (profileClass.compareTo("1") == 0) {
+                    fields[5] = "Provisioning";
+                } else if (profileClass.compareTo("2") == 0) {
+                    fields[5] = "Operational";
+                }
+
+            }
+
+            model.addRow(fields);
+
+        }
+
+        tblProfiles.setModel(model);
+        if (model.getRowCount() > 0) {
+            tblProfiles.setRowSelectionInterval(0, 0);
+        }
+
+        tblProfiles.getColumnModel().getColumn(0).setPreferredWidth(130);
 //        tblProfiles.getColumnModel().getColumn(1).setPreferredWidth(150);
-            tblProfiles.getColumnModel().getColumn(2).setPreferredWidth(50);
-            tblProfiles.getColumnModel().getColumn(3).setPreferredWidth(70);
-            tblProfiles.getColumnModel().getColumn(4).setPreferredWidth(130);
+        tblProfiles.getColumnModel().getColumn(2).setPreferredWidth(50);
+        tblProfiles.getColumnModel().getColumn(3).setPreferredWidth(70);
+        tblProfiles.getColumnModel().getColumn(4).setPreferredWidth(130);
 //        tblProfiles.getColumnModel().getColumn(5).setPreferredWidth(100);
 
-        } catch (Exception ex) {
-            LOG.log(Level.WARNING, ex.toString());
-            Util.showMessageDialog(null, String.format("Failed to refresh profiles list \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
-        }
+//        } catch (Exception ex) {
+//            LOG.log(Level.WARNING, ex.toString());
+//            Util.showMessageDialog(null, String.format("Failed to refresh profiles list \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
+//        }
     }
 
-    private void updateEuiccInfo() {
+    private void updateEuiccInfo() throws DecoderException, IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Eid: ").append(lpa.getEID()).append(System.getProperty("line.separator"));
 
@@ -851,15 +868,15 @@ public class LPAUI extends javax.swing.JFrame {
         EuiccConfiguredAddressesResponse configuredAddress = new EuiccConfiguredAddressesResponse();
         String rootDsAddress = "", defaultSmdpAddress = "";
 
-        try {
+        //try {
             is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
             configuredAddress.decode(is);
             rootDsAddress = configuredAddress.getRootDsAddress() != null ? configuredAddress.getRootDsAddress().toString() : "";
             defaultSmdpAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to get SMDP+ & SMDS addresses\nReason:%s\nCheck the logs for more info", ex.getMessage()));
-        }
+        //} catch (Exception ex) {
+        //    LOG.log(Level.SEVERE, ex.toString());
+        //    Util.showMessageDialog(this, String.format("Failed to get SMDP+ & SMDS addresses\nReason:%s\nCheck the logs for more info", ex.getMessage()));
+        //}
 
         sb.append("Root SM-DS: ").append(rootDsAddress).append(System.getProperty("line.separator"));
         sb.append("Default SM-DP: ").append(defaultSmdpAddress).append(System.getProperty("line.separator"));
@@ -878,7 +895,6 @@ public class LPAUI extends javax.swing.JFrame {
         btnAddProfile.setEnabled(!processing);
         cmbReaders.setEditable(!processing);
         btnHandleNotifications.setEnabled(!processing);
-                
 
 //      }
 //        };

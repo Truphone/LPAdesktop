@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.truphone</groupId>
     <artifactId>LPA</artifactId>
-    <version>0.1.2.10</version>
+    <version>0.1.2.12</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -196,14 +196,14 @@
                     <bundleName>Truphone LPA</bundleName>
                     <iconFile>tru_logo.icns</iconFile>
                     
-                    <additionalResources>
+                    <additionalBundledClasspathResources>
                         <fileSet>
                             <directory>${basedir}/src/main/resources/mac</directory>
                             <includes>
                                 <include>logging.properties</include>
                             </includes>
                         </fileSet>
-                    </additionalResources>
+                        </additionalBundledClasspathResources>
                 </configuration>
                 <executions>
                     <execution>
