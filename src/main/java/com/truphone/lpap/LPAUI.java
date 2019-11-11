@@ -9,32 +9,21 @@ import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
 import com.truphone.util.LogStub;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Image;
 import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -44,28 +33,15 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.CardTerminals;
 import javax.smartcardio.TerminalFactory;
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.InputMap;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.DefaultEditorKit;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import sun.security.util.Length;
 
 /**
  *
@@ -80,7 +56,7 @@ public class LPAUI extends javax.swing.JFrame {
     //String serverAddress = "", ssl_validation = "", keystore_file = "";
     String cardReaderToUse = "", cardReaderFromProps = "";
     private Point initialClick;
-
+    List<Map<String, String>> profiles;
     /**
      * Creates new form LPAUI
      */
@@ -270,7 +246,13 @@ public class LPAUI extends javax.swing.JFrame {
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        tblProfiles.setComponentPopupMenu(popUpProfiles);
+        tblProfiles.setRowSelectionAllowed(false);
+        tblProfiles.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tblProfiles.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblProfilesMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblProfiles);
 
         jLabel1.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
@@ -548,16 +530,16 @@ public class LPAUI extends javax.swing.JFrame {
         String iccid = (String) tblProfiles.getValueAt(selectedRow, 0);
         String profileName = (String) tblProfiles.getValueAt(selectedRow, 3);
         String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
-        
 
-        if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        //if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        if (Util.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile") == JOptionPane.YES_OPTION) {
 
             SwingWorker sw = new SwingWorker() {
                 @Override
                 protected Object doInBackground() throws Exception {
                     setProcessing(true);
                     try {
-                        
+
                         lpa.disableProfile(isdp_aid);
                         lpa.deleteProfile(isdp_aid);
 
@@ -676,14 +658,14 @@ public class LPAUI extends javax.swing.JFrame {
         setProcessing(true);
 
         lpa.setSMDPAddress(address);
-        
-        try{
-        updateEuiccInfo();
-        }catch(DecoderException | IOException ex){
+
+        try {
+            updateEuiccInfo();
+        } catch (DecoderException | IOException ex) {
             LOG.log(Level.WARNING, ex.toString());
             Util.showMessageDialog(null, "Failed to read Euicc Info");
         }
-        
+
         setProcessing(false);
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
 
@@ -747,6 +729,22 @@ public class LPAUI extends javax.swing.JFrame {
         lpa.disconnect();
     }//GEN-LAST:event_formWindowClosed
 
+    private void tblProfilesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblProfilesMouseClicked
+        if (SwingUtilities.isRightMouseButton(evt) == true) {
+            int row = tblProfiles.rowAtPoint(evt.getPoint());
+            tblProfiles.clearSelection();
+            tblProfiles.addRowSelectionInterval(row, row);
+            popUpProfiles.show(evt.getComponent(), evt.getX(), evt.getY());
+//            int row = tblProfilesMouseClicked;.(evt);.rowAtPoint(me.getPoint());
+//
+//            table1.clearSelection();
+//            table1.addRowSelectionInterval(row, row);
+//            //your popup menu goes here.
+        }
+
+
+    }//GEN-LAST:event_tblProfilesMouseClicked
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddProfile;
@@ -791,7 +789,7 @@ public class LPAUI extends javax.swing.JFrame {
     private void listProfiles() {
 //        try {
 
-        List<Map<String, String>> profiles = lpa.getProfiles();
+        profiles = lpa.getProfiles();
 
         DefaultTableModel model = new DefaultTableModel();
 
@@ -871,10 +869,10 @@ public class LPAUI extends javax.swing.JFrame {
         String rootDsAddress = "", defaultSmdpAddress = "";
 
         //try {
-            is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
-            configuredAddress.decode(is);
-            rootDsAddress = configuredAddress.getRootDsAddress() != null ? configuredAddress.getRootDsAddress().toString() : "";
-            defaultSmdpAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
+        is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
+        configuredAddress.decode(is);
+        rootDsAddress = configuredAddress.getRootDsAddress() != null ? configuredAddress.getRootDsAddress().toString() : "";
+        defaultSmdpAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
         //} catch (Exception ex) {
         //    LOG.log(Level.SEVERE, ex.toString());
         //    Util.showMessageDialog(this, String.format("Failed to get SMDP+ & SMDS addresses\nReason:%s\nCheck the logs for more info", ex.getMessage()));

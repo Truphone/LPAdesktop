@@ -68,14 +68,24 @@ public class Util {
         id.setText(text);
         id.setPredefinedValue(predefinedValue);
         id.setVisible(true);
-        
+
         return id.getValue();
     }
-    
+
     public static void showMessageDialog(JFrame parent, String text) {
         MessageDialog d = new MessageDialog(parent);
         d.setText(text);
-      
+
         d.setVisible(true);
+    }
+
+    public static int showConfirmDialog(JFrame parent, String text, String title) {
+        ConfirmDialog d = new ConfirmDialog(parent);
+        d.setTitle(title);
+        d.setText(text);
+
+        d.setVisible(true);
+        return d.getResult();
+
     }
 }
