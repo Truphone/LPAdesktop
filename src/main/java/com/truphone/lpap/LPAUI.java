@@ -8,7 +8,9 @@ package com.truphone.lpap;
 import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
 import com.truphone.util.LogStub;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -49,6 +51,25 @@ import org.apache.commons.codec.binary.Hex;
 import java.awt.datatransfer.StringSelection;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+import javax.swing.border.Border;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import org.json.JSONObject;
 
 /**
  *
@@ -72,7 +93,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         String loggingConfigFile = "logging.properties";
 
-//TODO: uncomment
+
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
             loggingConfigFile = "contents/java/lib/logging.properties";
         } else {
@@ -92,23 +113,23 @@ public class LPAUI extends javax.swing.JFrame {
 
         LocalDateTime today = LocalDateTime.now();
 
-//        if (today.getYear() >= 2019 && today.getMonthValue() > 12) {
-//            // TODO add your handling code here:
-//            StringBuilder sb = new StringBuilder();
-//
-//            String version = getAppVersion();
-//            if (version != null && version.length() > 0) {
-//                version = String.format("(V%s) ", version);
-//            } else {
-//                version = "";
-//            }
-//
-//            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
-//            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
-//
-//            Util.showMessageDialog(this, sb.toString());
-//            System.exit(0);
-//        }
+        if (today.getYear() >= 2019 && today.getMonthValue() > 12) {
+            // TODO add your handling code here:
+            StringBuilder sb = new StringBuilder();
+
+            String version = getAppVersion();
+            if (version != null && version.length() > 0) {
+                version = String.format("(V%s) ", version);
+            } else {
+                version = "";
+            }
+
+            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
+            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
+
+            Util.showMessageDialog(this, sb.toString());
+            System.exit(0);
+        }
         initComponents();
 
         LogStub.getInstance().setAndroidLog(true);
@@ -175,6 +196,23 @@ public class LPAUI extends javax.swing.JFrame {
 
         lblTitleBar.setText(appTitle);
 
+        listProfiles.setCellRenderer(new MyProfileCellRenderer());
+
+        ComponentListener l = new ComponentAdapter() {
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // next line possible if list is of type JXList
+                // list.invalidateCellSizeCache();
+                // for core: force cache invalidation by temporarily setting fixed height
+                listProfiles.setFixedCellHeight(10);
+                listProfiles.setFixedCellHeight(-1);
+            }
+
+        };
+
+        listProfiles.addComponentListener(l);
+
     }
 
     /**
@@ -187,19 +225,14 @@ public class LPAUI extends javax.swing.JFrame {
     private void initComponents() {
 
         popUpProfiles = new javax.swing.JPopupMenu();
-        miCopyValue = new javax.swing.JMenuItem();
+        miCopyIccid = new javax.swing.JMenuItem();
+        miCopyAid = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miEnableProfile = new javax.swing.JMenuItem();
         miDisableProfile = new javax.swing.JMenuItem();
         miDeleteProfile = new javax.swing.JMenuItem();
         mainPanel = new javax.swing.JPanel();
         cmbReaders = new javax.swing.JComboBox<>();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tblProfiles = new javax.swing.JTable(){
-            public boolean isCellEditable(int row,int column){
-                return false;
-            }
-        }; ;
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         btnRefreshReaders = new javax.swing.JButton();
@@ -215,14 +248,24 @@ public class LPAUI extends javax.swing.JFrame {
         btnCloseApp = new javax.swing.JButton();
         btnCloseApp2 = new javax.swing.JButton();
         btnHandleNotifications = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        listProfiles = new javax.swing.JList<>();
 
-        miCopyValue.setText("Copy Value");
-        miCopyValue.addActionListener(new java.awt.event.ActionListener() {
+        miCopyIccid.setText("Copy ICCID");
+        miCopyIccid.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCopyValueActionPerformed(evt);
+                miCopyIccidActionPerformed(evt);
             }
         });
-        popUpProfiles.add(miCopyValue);
+        popUpProfiles.add(miCopyIccid);
+
+        miCopyAid.setText("Copy AID");
+        miCopyAid.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCopyAidActionPerformed(evt);
+            }
+        });
+        popUpProfiles.add(miCopyAid);
         popUpProfiles.add(jSeparator1);
 
         miEnableProfile.setText("Enable");
@@ -264,14 +307,6 @@ public class LPAUI extends javax.swing.JFrame {
         });
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
-
-        tblProfiles.setRowSelectionAllowed(false);
-        tblProfiles.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tblProfilesMouseClicked(evt);
-            }
-        });
-        jScrollPane1.setViewportView(tblProfiles);
 
         jLabel1.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(0, 50, 63));
@@ -394,6 +429,10 @@ public class LPAUI extends javax.swing.JFrame {
             }
         });
 
+        listProfiles.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listProfiles.setComponentPopupMenu(popUpProfiles);
+        jScrollPane1.setViewportView(listProfiles);
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
@@ -404,6 +443,12 @@ public class LPAUI extends javax.swing.JFrame {
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel3))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                                 .addGap(0, 190, Short.MAX_VALUE)
@@ -420,18 +465,11 @@ public class LPAUI extends javax.swing.JFrame {
                                         .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addContainerGap())
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addComponent(lblProgress)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                                .addComponent(lblProgress)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap())))
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -457,12 +495,12 @@ public class LPAUI extends javax.swing.JFrame {
                 .addGap(26, 26, 26)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblProgress)
                     .addComponent(btnAddProfile))
-                .addGap(0, 8, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -473,7 +511,9 @@ public class LPAUI extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         pack();
@@ -490,8 +530,8 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void miEnableProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miEnableProfileActionPerformed
 
-        int selectedRow = tblProfiles.getSelectedRow();
-        String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
+        int idx = listProfiles.getSelectedIndex();
+        String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
 
         SwingWorker sw = new SwingWorker() {
             @Override
@@ -518,8 +558,8 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void miDisableProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDisableProfileActionPerformed
 
-        int selectedRow = tblProfiles.getSelectedRow();
-        String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
+        int idx = listProfiles.getSelectedIndex();
+        String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
 
         SwingWorker sw = new SwingWorker() {
             @Override
@@ -547,10 +587,10 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void miDeleteProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDeleteProfileActionPerformed
 
-        int selectedRow = tblProfiles.getSelectedRow();
-        String iccid = (String) tblProfiles.getValueAt(selectedRow, 0);
-        String profileName = (String) tblProfiles.getValueAt(selectedRow, 3);
-        String isdp_aid = (String) tblProfiles.getValueAt(selectedRow, 4);
+        int idx = listProfiles.getSelectedIndex();
+        String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
+        String iccid = Util.swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
 
         //if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
         if (Util.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile") == JOptionPane.YES_OPTION) {
@@ -566,7 +606,7 @@ public class LPAUI extends javax.swing.JFrame {
 
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, ex.toString());
-                        //Util.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
+                        Util.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
                         Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                     }
 
@@ -764,33 +804,32 @@ public class LPAUI extends javax.swing.JFrame {
         lpa.disconnect();
     }//GEN-LAST:event_formWindowClosed
 
-    private void tblProfilesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblProfilesMouseClicked
-        if (SwingUtilities.isRightMouseButton(evt) == true) {
-            int row = tblProfiles.rowAtPoint(evt.getPoint());
-            tblProfiles.clearSelection();
-            tblProfiles.addRowSelectionInterval(row, row);
-            popUpProfiles.show(evt.getComponent(), evt.getX(), evt.getY());
-//            int row = tblProfilesMouseClicked;.(evt);.rowAtPoint(me.getPoint());
-//
-//            table1.clearSelection();
-//            table1.addRowSelectionInterval(row, row);
-//            //your popup menu goes here.
+    private void miCopyIccidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyIccidActionPerformed
+        int idx = listProfiles.getSelectedIndex();
+        //String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
+        String iccid = Util.swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        if (iccid.toLowerCase().charAt(iccid.length() - 1) == 'f') {
+            //remove the 'f'
+            iccid = iccid.substring(0, iccid.length() - 1);
         }
+        //String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
 
+        StringSelection stringSelection = new StringSelection((String) iccid);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
 
-    }//GEN-LAST:event_tblProfilesMouseClicked
+    }//GEN-LAST:event_miCopyIccidActionPerformed
 
-    private void miCopyValueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyValueActionPerformed
-      int row = tblProfiles.getSelectedRow();
-        int column = tblProfiles.getSelectedColumn();
-        Object o = (Object) tblProfiles.getValueAt(row, column);
+    private void miCopyAidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyAidActionPerformed
+        int idx = listProfiles.getSelectedIndex();
+        String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
+        //String iccid = Util.swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        //String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
 
-        if (o != null) {
-            StringSelection stringSelection = new StringSelection((String) o);
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(stringSelection, null);
-        }
-    }//GEN-LAST:event_miCopyValueActionPerformed
+        StringSelection stringSelection = new StringSelection((String) isdp_aid);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+    }//GEN-LAST:event_miCopyAidActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -811,13 +850,14 @@ public class LPAUI extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel lblProgress;
     private javax.swing.JLabel lblTitleBar;
+    private javax.swing.JList<String> listProfiles;
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JMenuItem miCopyValue;
+    private javax.swing.JMenuItem miCopyAid;
+    private javax.swing.JMenuItem miCopyIccid;
     private javax.swing.JMenuItem miDeleteProfile;
     private javax.swing.JMenuItem miDisableProfile;
     private javax.swing.JMenuItem miEnableProfile;
     private javax.swing.JPopupMenu popUpProfiles;
-    private javax.swing.JTable tblProfiles;
     private javax.swing.JTextArea txtEuiccInfo;
     // End of variables declaration//GEN-END:variables
 
@@ -840,69 +880,46 @@ public class LPAUI extends javax.swing.JFrame {
 
         profiles = lpa.getProfiles();
 
-        DefaultTableModel model = new DefaultTableModel();
+        DefaultListModel model = new DefaultListModel();
 
-        model.addColumn("Iccid");
-        model.addColumn("Name");
-        model.addColumn("State");
-        model.addColumn("Spn");
-        model.addColumn("Aid");
-        model.addColumn("Class");
-
+//
+//        ArrayList<Log> loggs = new ArrayList<Log>(logs.values());
+//
+//        Comparator<Log> compareByTimestamp = new Comparator<Log>() {
+//            @Override
+//            public int compare(Log o1, Log o2) {
+//                return o1.getTimestamp().compareTo(o2.getTimestamp());
+//            }
+//        };
+//
+//        ArrayList<String> keys = null;
+//        Comparator<String> compareFieldsAlphabetically = new Comparator<String>() {
+//            @Override
+//            public int compare(String o1, String o2) {
+//                return o1.toLowerCase().compareTo(o2.toLowerCase());
+//            }
+//        };
+//
+//        DefaultTableModel model = new DefaultTableModel();
+//        model.addColumn("Iccid");
+//        model.addColumn("Name");
+//        model.addColumn("State");
+//        model.addColumn("Spn");
+//        model.addColumn("Aid");
+//        model.addColumn("Class");
         for (Map<String, String> profile : profiles) {
-            String[] fields = new String[profile.size()];
-
-            if (profile.containsKey("ICCID")) {
-                String iccidUnswapped = Util.swapNibblesOnString(profile.get("ICCID"));
-                fields[0] = iccidUnswapped.toLowerCase().charAt(19) == 'f' ? iccidUnswapped.substring(0, 19) : iccidUnswapped.substring(0, 20);
-
-            }
-
-            if (profile.containsKey("NAME")) {
-                fields[1] = profile.get("NAME");
-            }
-
-            if (profile.containsKey("PROFILE_STATE")) {
-                fields[2] = profile.get("PROFILE_STATE").compareTo("1") == 0 ? "Enabled" : "Disabled";
-
-            }
-
-            if (profile.containsKey("PROVIDER_NAME")) {
-                fields[3] = profile.get("PROVIDER_NAME");
-            }
-
-            if (profile.containsKey("ISDP_AID")) {
-                fields[4] = profile.get("ISDP_AID");
-            }
-
-            if (profile.containsKey("PROFILE_CLASS")) {
-                String profileClass = profile.get("PROFILE_CLASS");
-                if (profileClass.compareTo("0") == 0) {
-                    fields[5] = "Test";
-                } else if (profileClass.compareTo("1") == 0) {
-                    fields[5] = "Provisioning";
-                } else if (profileClass.compareTo("2") == 0) {
-                    fields[5] = "Operational";
-                }
-
-            }
-
-            model.addRow(fields);
+//            String[] fields = new String[profile.size()];
+            model.addElement(profile);
 
         }
 
-        tblProfiles.setModel(model);
-        if (model.getRowCount() > 0) {
-            tblProfiles.setRowSelectionInterval(0, 0);
+        listProfiles.setModel(model);
+        if (model.getSize() > 0) {
+            listProfiles.setSelectedIndex(0);
+
         }
 
-        tblProfiles.getColumnModel().getColumn(0).setPreferredWidth(130);
-//        tblProfiles.getColumnModel().getColumn(1).setPreferredWidth(150);
-        tblProfiles.getColumnModel().getColumn(2).setPreferredWidth(50);
-        tblProfiles.getColumnModel().getColumn(3).setPreferredWidth(70);
-        tblProfiles.getColumnModel().getColumn(4).setPreferredWidth(130);
 //        tblProfiles.getColumnModel().getColumn(5).setPreferredWidth(100);
-
 //        } catch (Exception ex) {
 //            LOG.log(Level.WARNING, ex.toString());
 //            Util.showMessageDialog(null, String.format("Failed to refresh profiles list \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
@@ -994,4 +1011,244 @@ public class LPAUI extends javax.swing.JFrame {
         }
         return getClass().getPackage().getImplementationVersion();
     }
+
+    private void showLogs(String field, String value) {
+
+//        //DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeResult.getModel().getRoot();
+//        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Logs related to " + field + "=" + value);
+//
+//        DefaultTreeModel model = new DefaultTreeModel(top);
+//
+//        DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+//        model.reload(root);
+//        treeProfiles.setModel(model);
+//
+//        ArrayList<Log> loggs = new ArrayList<Log>(logs.values());
+//
+//        Comparator<Log> compareByTimestamp = new Comparator<Log>() {
+//            @Override
+//            public int compare(Log o1, Log o2) {
+//                return o1.getTimestamp().compareTo(o2.getTimestamp());
+//            }
+//        };
+//
+//        ArrayList<String> keys = null;
+//        Comparator<String> compareFieldsAlphabetically = new Comparator<String>() {
+//            @Override
+//            public int compare(String o1, String o2) {
+//                return o1.toLowerCase().compareTo(o2.toLowerCase());
+//            }
+//        };
+//
+//        Collections.sort(loggs, compareByTimestamp);
+//        for (Log l : loggs) {
+//            StringBuilder sb = new StringBuilder();
+//            String timestamp, transactionId, address, iccid, matchingId, eid, direction, logId;
+//
+//            JSONObject request = l.getRequest();
+//
+//            if (request != null) {
+//                Object o;
+//                //request
+//                o = request.get("@timestamp");
+//                timestamp = (o == null) ? "" : (String) o;
+//
+//                o = request.get("address");
+//                address = (o == null) ? "" : (String) o;
+//
+//                if (address.length() == 0) {
+//                    //try to get address form response. handleDownloadProgressInfo cases. 
+//                    o = l.getResponse().get("address");
+//                    address = (o == null) ? "" : (String) o;
+//                }
+//
+//                o = request.get("transactionId");
+//                transactionId = (o == null) ? "" : (String) o;
+//
+//                o = request.get("iccid");
+//                iccid = (o == null) ? "" : (String) o;
+//
+//                o = request.get("matchingId");
+//                matchingId = (o == null) ? "" : (String) o;
+//
+//                o = request.get("eid");
+//                eid = (o == null) ? "" : (String) o;
+//
+//                o = request.get("direction");
+//                direction = (o == null) ? "" : (String) o;
+//
+//                o = request.get("logId");
+//                logId = (o == null) ? "" : (String) o;
+//
+//                sb.append(timestamp).append("\t").append(logId).append("\t").append(address);
+//            } else {
+//
+//                sb.append("???????");
+//            }
+//
+//            TreePath path = treeProfiles.getSelectionPath();
+//
+//            DefaultMutableTreeNode parentNode = null;
+//            if (path == null) {
+//                parentNode = (DefaultMutableTreeNode) treeResult.getModel().getRoot();
+//            } else {
+//                parentNode = (DefaultMutableTreeNode) treeResult.getSelectionPath().getLastPathComponent();
+//            }
+//
+//            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(sb.toString());
+//            parentNode.add(newNode);
+//
+//            DefaultMutableTreeNode requestNode = new DefaultMutableTreeNode("Request");
+//            newNode.add(requestNode);
+//
+//            DefaultMutableTreeNode responseNode = new DefaultMutableTreeNode("Response");
+//            newNode.add(responseNode);
+//
+//            JSONObject requestJsonObject = (JSONObject) l.getRequest();
+//
+//            if (requestJsonObject != null) {
+//
+//                keys = new ArrayList<>(requestJsonObject.keySet());
+//                Collections.sort(keys, compareFieldsAlphabetically);
+//
+//                //for (Iterator iterator = requestJsonObject.keySet().iterator(); iterator.hasNext();) {
+//                for (String key : keys) {
+//                    //String key = (String) iterator.next();
+//                    sb = new StringBuilder();
+//                    sb.append(key).append(" -> ").append(requestJsonObject.get(key));
+//
+//                    DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(sb.toString());
+//                    requestNode.add(fieldNode);
+//                }
+//
+//            }
+//            JSONObject responseJsonObject = (JSONObject) l.getResponse();
+//
+//            if (responseJsonObject != null) {
+//                keys.clear();
+//                keys.addAll(l.getResponse().keySet());
+//
+//                Collections.sort(keys, compareFieldsAlphabetically);
+//
+//                //for (Iterator iterator = responseJsonObject.keySet().iterator(); iterator.hasNext();) {
+//                for (String key : keys) {
+//                    //String key = (String) iterator.next();
+//                    sb = new StringBuilder();
+//                    sb.append(key).append(" -> ").append(responseJsonObject.get(key));
+//
+//                    DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(sb.toString());
+//                    responseNode.add(fieldNode);
+//                }
+//
+//            }
+//            ((DefaultTreeModel) treeResult.getModel()).reload();
+//
+//            DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) treeResult.getCellRenderer();
+//            renderer.setTextSelectionColor(Color.white);
+//            renderer.setBackgroundSelectionColor(Color.blue);
+//            renderer.setBorderSelectionColor(Color.black);
+//
+//        }
+    }
+
+    public class MyProfileCellRenderer extends DefaultListCellRenderer {
+
+        @Override
+        public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean hasFocus) {
+
+            Map<String, String> profile = (Map<String, String>) value;
+            StringBuilder sb = new StringBuilder();
+
+            String[] fields = new String[profile.size()];
+
+            boolean enabled = false;
+            if (profile.containsKey("ICCID")) {
+                String iccidUnswapped = Util.swapNibblesOnString(profile.get("ICCID"));
+                fields[0] = iccidUnswapped.toLowerCase().charAt(19) == 'f' ? iccidUnswapped.substring(0, 19) : iccidUnswapped.substring(0, 20);
+                sb.append("ICCID: ").append(fields[0]).append("\r\n");
+            }
+
+            if (profile.containsKey("NAME")) {
+                fields[1] = profile.get("NAME");
+                sb.append("NAME: ").append(fields[1]).append("\r\n");
+
+            }
+
+            if (profile.containsKey("PROFILE_STATE")) {
+                fields[2] = profile.get("PROFILE_STATE").compareTo("1") == 0 ? "Enabled" : "Disabled";
+                sb.append("PROFILE STATE: ").append(fields[2]).append("\r\n");
+                if (fields[2].toLowerCase().compareTo("enabled") == 0) {
+                    enabled = true;
+                }
+            }
+
+            if (profile.containsKey("PROVIDER_NAME")) {
+                fields[3] = profile.get("PROVIDER_NAME");
+                sb.append("PROVIDER NAME: ").append(fields[3]).append("\r\n");
+
+            }
+
+            if (profile.containsKey("ISDP_AID")) {
+                fields[4] = profile.get("ISDP_AID");
+                sb.append("ISDP AID: ").append(fields[4]).append("\r\n");
+
+            }
+
+            if (profile.containsKey("PROFILE_CLASS")) {
+                String profileClass = profile.get("PROFILE_CLASS");
+                if (profileClass.compareTo("0") == 0) {
+                    fields[5] = "Test";
+                    sb.append("PROFILE CLASS: ").append(fields[5]);
+
+                } else if (profileClass.compareTo("1") == 0) {
+
+                    fields[5] = "Provisioning";
+                    sb.append("PROFILE CLASS: ").append(fields[5]);
+                } else if (profileClass.compareTo("2") == 0) {
+                    fields[5] = "Operational";
+                    sb.append("PROFILE CLASS: ").append(fields[5]);
+
+                }
+
+            }
+
+            //create panel
+            final JPanel p = new JPanel();
+            
+            p.setLayout(new BorderLayout());
+
+            //icon
+            final JPanel IconPanel = new JPanel(new BorderLayout());
+
+            final JLabel l = new JLabel(); //<-- this will be an icon instead of a text
+            l.setIcon(new ImageIcon(getClass().getResource("/gsma_esim.png")));
+            IconPanel.setBackground(Color.white);
+            IconPanel.add(l, BorderLayout.NORTH);
+            p.add(IconPanel, BorderLayout.WEST);
+            
+
+            
+
+            //text
+            final JTextArea ta = new JTextArea();
+            //ta.setSize(200, 50);
+            ta.setText(sb.toString());
+            ta.setLineWrap(true);
+            ta.setWrapStyleWord(true);
+            ta.setEditable(true);
+            p.add(ta, BorderLayout.CENTER);
+            if (enabled) {
+                ta.setBorder(BorderFactory.createLineBorder(Color.green));
+            }
+
+            if (isSelected) {
+                p.setBackground(new Color(0, 50, 63));
+            }
+
+            return p;
+
+        }
+    }
+
 }
+
