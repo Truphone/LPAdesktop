@@ -10,6 +10,9 @@ import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse
 import com.truphone.util.LogStub;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -43,6 +46,10 @@ import javax.swing.table.DefaultTableModel;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import java.awt.datatransfer.StringSelection;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+
 /**
  *
  * @author amilcar.pereira
@@ -57,6 +64,7 @@ public class LPAUI extends javax.swing.JFrame {
     String cardReaderToUse = "", cardReaderFromProps = "";
     private Point initialClick;
     List<Map<String, String>> profiles;
+
     /**
      * Creates new form LPAUI
      */
@@ -64,7 +72,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         String loggingConfigFile = "logging.properties";
 
-
+//TODO: uncomment
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
             loggingConfigFile = "contents/java/lib/logging.properties";
         } else {
@@ -179,6 +187,8 @@ public class LPAUI extends javax.swing.JFrame {
     private void initComponents() {
 
         popUpProfiles = new javax.swing.JPopupMenu();
+        miCopyValue = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miEnableProfile = new javax.swing.JMenuItem();
         miDisableProfile = new javax.swing.JMenuItem();
         miDeleteProfile = new javax.swing.JMenuItem();
@@ -205,6 +215,15 @@ public class LPAUI extends javax.swing.JFrame {
         btnCloseApp = new javax.swing.JButton();
         btnCloseApp2 = new javax.swing.JButton();
         btnHandleNotifications = new javax.swing.JButton();
+
+        miCopyValue.setText("Copy Value");
+        miCopyValue.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCopyValueActionPerformed(evt);
+            }
+        });
+        popUpProfiles.add(miCopyValue);
+        popUpProfiles.add(jSeparator1);
 
         miEnableProfile.setText("Enable");
         miEnableProfile.addActionListener(new java.awt.event.ActionListener() {
@@ -247,7 +266,6 @@ public class LPAUI extends javax.swing.JFrame {
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
 
         tblProfiles.setRowSelectionAllowed(false);
-        tblProfiles.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tblProfiles.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblProfilesMouseClicked(evt);
@@ -270,7 +288,7 @@ public class LPAUI extends javax.swing.JFrame {
         });
 
         btnAddProfile.setForeground(new java.awt.Color(0, 50, 63));
-        btnAddProfile.setText("Download Profile");
+        btnAddProfile.setText("Download");
         btnAddProfile.setEnabled(false);
         btnAddProfile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -384,33 +402,36 @@ public class LPAUI extends javax.swing.JFrame {
             .addGroup(mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
-                        .addGap(0, 256, Short.MAX_VALUE)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
-                                .addComponent(btnHandleNotifications)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btnSetSMDPAddress))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmbReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 254, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGap(0, 190, Short.MAX_VALUE)
+                                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                                        .addComponent(btnHandleNotifications)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(btnSetSMDPAddress))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                                        .addComponent(jLabel2)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(cmbReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 254, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnRefreshReaders, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnConnect, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addContainerGap())
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
-                            .addComponent(jLabel3)
-                            .addGroup(mainPanelLayout.createSequentialGroup()
-                                .addGap(20, 20, 20)
-                                .addComponent(lblProgress)))
+                            .addComponent(jLabel3))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(lblProgress)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addComponent(btnAddProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -438,10 +459,10 @@ public class LPAUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblProgress)
                     .addComponent(btnAddProfile))
-                .addGap(0, 10, Short.MAX_VALUE))
+                .addGap(0, 8, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -452,7 +473,7 @@ public class LPAUI extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -618,14 +639,30 @@ public class LPAUI extends javax.swing.JFrame {
 
         //String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
         //String activationCode = Util.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
-        String matchingId = Util.showInputDialog(this, "Enter matchingId", "");
+        String code = Util.showInputDialog(this, "Enter Activation Code or Truphone MatchingId", "");
 
-        if (matchingId == null) {
+        if (code == null || code.length() == 0) {
             return;
         }
 
-        String activationCode = "1$rsp.truphone.com$" + matchingId;
+        String[] acparts = code.split("\\$");;
+        String activationCode = "";
+        if (code.toLowerCase().startsWith("lpa:1$") && acparts.length >= 3) {
+            //activtion code
 
+            activationCode = code.substring(4);
+        } else if (code.toLowerCase().startsWith("1$") && acparts.length >= 3) {
+            activationCode = code;
+        } else {
+            //matchingId
+            activationCode = "1$rsp.truphone.com$" + code;
+        }
+
+        download(activationCode);
+
+    }//GEN-LAST:event_btnAddProfileActionPerformed
+
+    private void download(String activationCode) {
         SwingWorker sw = new SwingWorker() {
             @Override
 
@@ -647,9 +684,7 @@ public class LPAUI extends javax.swing.JFrame {
         };
 
         sw.execute();
-
-    }//GEN-LAST:event_btnAddProfileActionPerformed
-
+    }
     private void btnSetSMDPAddressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetSMDPAddressActionPerformed
 
         String address = JOptionPane.showInputDialog(this, "Enter new SMDP+ address");
@@ -745,6 +780,18 @@ public class LPAUI extends javax.swing.JFrame {
 
     }//GEN-LAST:event_tblProfilesMouseClicked
 
+    private void miCopyValueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyValueActionPerformed
+      int row = tblProfiles.getSelectedRow();
+        int column = tblProfiles.getSelectedColumn();
+        Object o = (Object) tblProfiles.getValueAt(row, column);
+
+        if (o != null) {
+            StringSelection stringSelection = new StringSelection((String) o);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+        }
+    }//GEN-LAST:event_miCopyValueActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddProfile;
@@ -761,9 +808,11 @@ public class LPAUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel lblProgress;
     private javax.swing.JLabel lblTitleBar;
     private javax.swing.JPanel mainPanel;
+    private javax.swing.JMenuItem miCopyValue;
     private javax.swing.JMenuItem miDeleteProfile;
     private javax.swing.JMenuItem miDisableProfile;
     private javax.swing.JMenuItem miEnableProfile;
@@ -893,6 +942,7 @@ public class LPAUI extends javax.swing.JFrame {
         btnConnect.setEnabled(!processing);
         btnSetSMDPAddress.setEnabled(!processing);
         btnAddProfile.setEnabled(!processing);
+
         cmbReaders.setEditable(!processing);
         btnHandleNotifications.setEnabled(!processing);
 
