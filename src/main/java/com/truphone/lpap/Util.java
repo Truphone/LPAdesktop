@@ -71,6 +71,20 @@ public class Util {
 
         return id.getValue();
     }
+    
+    
+    public static String showInputActivationCodeDialog(JFrame parent, String text, String predefinedValue) {
+        InputActivationCodeDialog id = new InputActivationCodeDialog(parent);
+
+        id.setPredefinedMatchingId(predefinedValue);
+        id.setVisible(true);
+
+        String matchingID = id.getMatchingId();
+        String server = id.getServerURL();
+        
+        //returns the activation code
+        return String.format("1$%s$%s", server, matchingID);
+    }
 
     public static void showMessageDialog(JFrame parent, String text) {
         MessageDialog d = new MessageDialog(parent);

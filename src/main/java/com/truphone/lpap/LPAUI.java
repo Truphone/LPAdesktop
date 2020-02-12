@@ -111,25 +111,25 @@ public class LPAUI extends javax.swing.JFrame {
         }
         LOG = Logger.getLogger(LPAUI.class.getName());
 
-        LocalDateTime today = LocalDateTime.now();
-
-        if (today.getYear() >= 2019 && today.getMonthValue() > 12) {
-            // TODO add your handling code here:
-            StringBuilder sb = new StringBuilder();
-
-            String version = getAppVersion();
-            if (version != null && version.length() > 0) {
-                version = String.format("(V%s) ", version);
-            } else {
-                version = "";
-            }
-
-            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
-            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
-
-            Util.showMessageDialog(this, sb.toString());
-            System.exit(0);
-        }
+//        LocalDateTime today = LocalDateTime.now();
+//
+//        if (today.getYear() >= 2019 && today.getMonthValue() > 12) {
+//            // TODO add your handling code here:
+//            StringBuilder sb = new StringBuilder();
+//
+//            String version = getAppVersion();
+//            if (version != null && version.length() > 0) {
+//                version = String.format("(V%s) ", version);
+//            } else {
+//                version = "";
+//            }
+//
+//            sb.append(String.format("This version of Truphone LPAdesktop %sis no longer valid.", version)).append(System.getProperty("line.separator"));
+//            sb.append("Please contact Truphone (DevicesxSIMTechnologies&Roaming@truphone.com)").append(System.getProperty("line.separator"));
+//
+//            Util.showMessageDialog(this, sb.toString());
+//            System.exit(0);
+//        }
         initComponents();
 
         LogStub.getInstance().setAndroidLog(true);
@@ -676,30 +676,30 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
-
-        //String activationCode = JOptionPane.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
-        //String activationCode = Util.showInputDialog(this, "Enter activation code", "1$rsp.truphone.com$");
-        String code = Util.showInputDialog(this, "Enter Activation Code or Truphone MatchingId", "");
-
+//        String code = Util.showInputDialog(this, "Enter Activation Code or Truphone MatchingId", "");
+        String code = Util.showInputActivationCodeDialog(this, "Enter the MatchingId", "");
+       
         if (code == null || code.length() == 0) {
             return;
         }
 
-        String[] acparts = code.split("\\$");;
-        String activationCode = "";
-        if (code.toLowerCase().startsWith("lpa:1$") && acparts.length >= 3) {
-            //activtion code
+// This block of code is for building the activation code based on the user's input. It allows the download of any profile from any server        
+//        String[] acparts = code.split("\\$");;
+//        String activationCode = "";
+//        if (code.toLowerCase().startsWith("lpa:1$") && acparts.length >= 3) {
+//            //activtion code
+//
+//            activationCode = code.substring(4);
+//        } else if (code.toLowerCase().startsWith("1$") && acparts.length >= 3) {
+//            activationCode = code;
+//        } else {
+//            //matchingId
+//            activationCode = "1$rsp.truphone.com$" + code;
+//        }
 
-            activationCode = code.substring(4);
-        } else if (code.toLowerCase().startsWith("1$") && acparts.length >= 3) {
-            activationCode = code;
-        } else {
-            //matchingId
-            activationCode = "1$rsp.truphone.com$" + code;
-        }
-
-        download(activationCode);
-
+        //We consider the inputed value as a matchingID, it will always use truphones SMDP+. 
+        //JOptionPane.showMessageDialog(this, code);
+        download(code);
     }//GEN-LAST:event_btnAddProfileActionPerformed
 
     private void download(String activationCode) {

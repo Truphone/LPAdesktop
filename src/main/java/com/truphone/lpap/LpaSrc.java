@@ -138,4 +138,10 @@ public class LpaSrc {
         lpa=null;
         
     }
+    
+    public void smdpRetrieveEvents(){
+        lpa.smdsRetrieveEvents(progress);
+        //resetLpa();
+        //processPendingNotificaitons();
+    }
 }
