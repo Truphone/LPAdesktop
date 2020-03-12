@@ -94,7 +94,7 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
             }
         });
 
-        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io" }));
+        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io", "rsp-staging.truphone.com" }));
 
         jLabel2.setText("Server URL");
 
@@ -103,7 +103,7 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(12, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
