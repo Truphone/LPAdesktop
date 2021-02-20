@@ -65,7 +65,7 @@ public class main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws CardException, Exception {
-
+        System.setProperty("sun.security.smartcardio.library", "/System/Library/Frameworks/PCSC.framework/Versions/Current/PCSC");
         LogStub.getInstance().setAndroidLog(true);
 
         LogStub.getInstance().setLogLevel(Level.ALL);

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.truphone</groupId>
     <artifactId>LPA</artifactId>
-    <version>0.1.2.17</version>
+    <version>0.1.2.21</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -12,16 +12,6 @@
     </properties>
     
     <dependencies>
-        <dependency>
-            <groupId>com.truphone.lpad</groupId>
-            <artifactId>lpad-sm-dp-plus-connector</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.truphone.lpad</groupId>
-            <artifactId>apdu-channel-simulator</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -57,7 +47,7 @@
         <dependency>
             <groupId>com.github.sarxos</groupId>
             <artifactId>webcam-capture</artifactId>
-            <version>0.3.13-SNAPSHOT</version>
+            <version>0.3.12</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -71,6 +61,11 @@
             <artifactId>javase</artifactId>
             <version>3.3.0</version>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.truphone.lpad</groupId>
+            <artifactId>lpad-sm-dp-plus-connector</artifactId>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <name>LPASCR</name>
