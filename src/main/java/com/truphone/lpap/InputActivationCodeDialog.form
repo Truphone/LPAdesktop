@@ -158,12 +158,13 @@
         <Component class="javax.swing.JComboBox" name="cmbServer">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="5">
+              <StringArray count="6">
                 <StringItem index="0" value="rsp.truphone.com"/>
                 <StringItem index="1" value="smdp.io"/>
                 <StringItem index="2" value="rsp-staging.truphone.com"/>
                 <StringItem index="3" value="rsp-sandbox.truphone.com"/>
                 <StringItem index="4" value="rsp-ams.smdp.io"/>
+                <StringItem index="5" value="rsp-mow.smdp.io"/>
               </StringArray>
             </Property>
           </Properties>

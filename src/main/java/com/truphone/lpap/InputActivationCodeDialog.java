@@ -94,7 +94,7 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
             }
         });
 
-        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io" }));
+        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io", "rsp-mow.smdp.io" }));
 
         jLabel2.setText("Server URL");
 
