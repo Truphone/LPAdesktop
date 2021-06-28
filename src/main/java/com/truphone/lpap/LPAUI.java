@@ -105,10 +105,11 @@ public class LPAUI extends javax.swing.JFrame {
         if (propFile.exists()) {
             System.setProperty("java.util.logging.config.file",
                     loggingConfigFile);
-        } else {
-            Util.showMessageDialog(this, "Couldn't find logging configuration");
-            System.exit(0);
-        }
+        } 
+//        else {
+//            Util.showMessageDialog(this, "Couldn't find logging configuration");
+//            System.exit(0);
+//        }
         LOG = Logger.getLogger(LPAUI.class.getName());
 
 //        LocalDateTime today = LocalDateTime.now();
