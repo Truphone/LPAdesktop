@@ -13,7 +13,11 @@ import javax.swing.BorderFactory;
  * @author amilcar.pereira
  */
 public class InputDialog extends javax.swing.JDialog {
-    String value=null;
+    
+    private boolean okPressed = false;
+    
+    private String value = null;
+    
     /**
      * Creates new form InputDialog
      */
@@ -37,6 +41,10 @@ public class InputDialog extends javax.swing.JDialog {
 
     public void setPredefinedValue(String text) {
         txtInput.setText(text);
+    }
+    
+    public boolean isOkPressed() {
+        return okPressed;
     }
 
     public String getValue() {
@@ -150,6 +158,7 @@ public class InputDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnCancelActionPerformed
 
     private void btnOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOKActionPerformed
+        okPressed = true;
         value=txtInput.getText();
         dispose();
     }//GEN-LAST:event_btnOKActionPerformed

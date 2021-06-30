@@ -12,9 +12,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -25,7 +22,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -42,9 +38,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import javax.swing.table.DefaultTableModel;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
@@ -54,22 +48,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Optional;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
-import javax.swing.border.Border;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import org.json.JSONObject;
 
 /**
  *
@@ -325,7 +309,6 @@ public class LPAUI extends javax.swing.JFrame {
 
         btnAddProfile.setForeground(new java.awt.Color(0, 50, 63));
         btnAddProfile.setText("Download");
-        btnAddProfile.setEnabled(false);
         btnAddProfile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAddProfileActionPerformed(evt);
@@ -350,7 +333,7 @@ public class LPAUI extends javax.swing.JFrame {
         jScrollPane2.setViewportView(txtEuiccInfo);
 
         btnSetSMDPAddress.setForeground(new java.awt.Color(0, 50, 63));
-        btnSetSMDPAddress.setText("Set SMDP+ Address");
+        btnSetSMDPAddress.setText("Set Default SMDP+ Address");
         btnSetSMDPAddress.setEnabled(false);
         btnSetSMDPAddress.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -678,11 +661,9 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
 //        String code = Util.showInputDialog(this, "Enter Activation Code or Truphone MatchingId", "");
-        String code = Util.showInputActivationCodeDialog(this, "Enter the MatchingId", "");
-       
-        if (code == null || code.length() == 0) {
-            return;
-        }
+        Optional<String> code = Util.showInputActivationCodeDialog(this, "Enter the MatchingId", "");
+        
+        if (code.isPresent()) {
 
 // This block of code is for building the activation code based on the user's input. It allows the download of any profile from any server        
 //        String[] acparts = code.split("\\$");;
@@ -700,7 +681,8 @@ public class LPAUI extends javax.swing.JFrame {
 
         //We consider the inputed value as a matchingID, it will always use truphones SMDP+. 
         //JOptionPane.showMessageDialog(this, code);
-        download(code);
+            download(code.get());
+        }
     }//GEN-LAST:event_btnAddProfileActionPerformed
 
     private void download(String activationCode) {
@@ -727,20 +709,30 @@ public class LPAUI extends javax.swing.JFrame {
         sw.execute();
     }
     private void btnSetSMDPAddressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetSMDPAddressActionPerformed
-
-        String address = JOptionPane.showInputDialog(this, "Enter new SMDP+ address");
-
+        String oldAddress = "";
+        try {
+            EuiccConfiguredAddressesResponse configuredAddress = getCurrentConfiguredAddressResponse();
+            oldAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
+        } catch (IOException | DecoderException ex) {
+            LOG.log(Level.SEVERE, "Error getting configured SM-DP+ default address from eUICC", ex);
+        }
+        
+        Optional<String> address = Util.showInputDialog(this, "Enter new SMDP+ address", oldAddress != null ? oldAddress : "");
+        
         //lpa.setSMDPAddress(com.truphone.util.Util.ASCIIToHex(address));
         setProcessing(true);
 
-        lpa.setSMDPAddress(address);
+        if (address.isPresent()) {
+            lpa.setSMDPAddress(address.get());
 
-        try {
-            updateEuiccInfo();
-        } catch (DecoderException | IOException ex) {
-            LOG.log(Level.WARNING, ex.toString());
-            Util.showMessageDialog(null, "Failed to read Euicc Info");
+            try {
+                updateEuiccInfo();
+            } catch (DecoderException | IOException ex) {
+                LOG.log(Level.WARNING, ex.toString());
+                Util.showMessageDialog(null, "Failed to read Euicc Info");
+            }
         }
+            
 
         setProcessing(false);
     }//GEN-LAST:event_btnSetSMDPAddressActionPerformed
@@ -926,18 +918,25 @@ public class LPAUI extends javax.swing.JFrame {
 //            Util.showMessageDialog(null, String.format("Failed to refresh profiles list \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
 //        }
     }
+    
+    private EuiccConfiguredAddressesResponse getCurrentConfiguredAddressResponse() throws IOException, DecoderException {
+        InputStream is;
+        EuiccConfiguredAddressesResponse configuredAddress = new EuiccConfiguredAddressesResponse();
+        is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
+        configuredAddress.decode(is);
+        
+        return configuredAddress;
+    }
 
     private void updateEuiccInfo() throws DecoderException, IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Eid: ").append(lpa.getEID()).append(System.getProperty("line.separator"));
 
         InputStream is;
-        EuiccConfiguredAddressesResponse configuredAddress = new EuiccConfiguredAddressesResponse();
+        EuiccConfiguredAddressesResponse configuredAddress = getCurrentConfiguredAddressResponse();
         String rootDsAddress = "", defaultSmdpAddress = "";
 
         //try {
-        is = new ByteArrayInputStream(Hex.decodeHex(lpa.getSMDPAddress().toCharArray()));
-        configuredAddress.decode(is);
         rootDsAddress = configuredAddress.getRootDsAddress() != null ? configuredAddress.getRootDsAddress().toString() : "";
         defaultSmdpAddress = configuredAddress.getDefaultDpAddress() != null ? configuredAddress.getDefaultDpAddress().toString() : "";
         //} catch (Exception ex) {
@@ -946,7 +945,7 @@ public class LPAUI extends javax.swing.JFrame {
         //}
 
         sb.append("Root SM-DS: ").append(rootDsAddress).append(System.getProperty("line.separator"));
-        sb.append("Default SM-DP: ").append(defaultSmdpAddress).append(System.getProperty("line.separator"));
+        sb.append("Default SM-DP+: ").append(defaultSmdpAddress).append(System.getProperty("line.separator"));
 
         txtEuiccInfo.setText(sb.toString());
 
@@ -959,7 +958,7 @@ public class LPAUI extends javax.swing.JFrame {
         btnRefreshReaders.setEnabled(!processing);
         btnConnect.setEnabled(!processing);
         btnSetSMDPAddress.setEnabled(!processing);
-        btnAddProfile.setEnabled(!processing);
+//        btnAddProfile.setEnabled(!processing);
 
         cmbReaders.setEditable(!processing);
         btnHandleNotifications.setEnabled(!processing);

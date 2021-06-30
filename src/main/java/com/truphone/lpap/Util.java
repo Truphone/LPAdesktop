@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.Properties;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
@@ -63,17 +64,17 @@ public class Util {
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
     }
 
-    public static String showInputDialog(JFrame parent, String text, String predefinedValue) {
+    public static Optional<String> showInputDialog(JFrame parent, String text, String predefinedValue) {
         InputDialog id = new InputDialog(parent);
         id.setText(text);
         id.setPredefinedValue(predefinedValue);
         id.setVisible(true);
 
-        return id.getValue();
+        return Optional.ofNullable(id.isOkPressed() ? id.getValue() : null);
     }
     
     
-    public static String showInputActivationCodeDialog(JFrame parent, String text, String predefinedValue) {
+    public static Optional<String> showInputActivationCodeDialog(JFrame parent, String text, String predefinedValue) {
         InputActivationCodeDialog id = new InputActivationCodeDialog(parent);
 
         id.setPredefinedMatchingId(predefinedValue);
@@ -83,7 +84,7 @@ public class Util {
         String server = id.getServerURL();
         
         //returns the activation code
-        return String.format("1$%s$%s", server, matchingID);
+        return Optional.ofNullable(id.isOkPressed() ? String.format("1$%s$%s", server, matchingID) : null);
     }
 
     public static void showMessageDialog(JFrame parent, String text) {

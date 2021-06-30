@@ -5,24 +5,49 @@
  */
 package com.truphone.lpap;
 
-import java.awt.Color;
-import javax.swing.BorderFactory;
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamPanel;
+import com.github.sarxos.webcam.WebcamResolution;
+import java.awt.event.TextEvent;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
 
 /**
  *
  * @author amilcar.pereira
  */
 public class InputActivationCodeDialog extends javax.swing.JDialog {
-    String value=null;
+    
+    private static java.util.logging.Logger LOG = null;
+    
+    private boolean okPressed = false;
+            
+    private String value = null;
+    
+    private Webcam webcam = null;
+
+    private WebcamPanel panel = null;
+    
+    private final QRCodeProcessor qrCodeProcessor = new QRCodeProcessor();
+    
     /**
      * Creates new form InputDialog
      */
     public InputActivationCodeDialog(java.awt.Frame parent) {
         super(parent, true);
         initComponents();
+        fillCmbCamera();
+        LOG = Logger.getLogger(LPAUI.class.getName());
+        qrCodeProcessor.addTextListener(new java.awt.event.TextListener() {
+            @Override
+            public void textValueChanged(TextEvent evt) {
+                qrCodeProcessorTextValueChanged(evt);
+            }
+        });
         
         setLocationRelativeTo(parent);
-        
 
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
@@ -31,11 +56,6 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         }
     }
 
-//    public void setText(String text) {
-//        lblText.setText(text);
-//    }
-//    
-    
     public void setPredefinedMatchingId(String text) {
         txtInput.setText(text);
     }
@@ -46,7 +66,35 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
     
     public String getServerURL() {
         return (String)cmbServer.getSelectedItem();
-   
+    }
+    
+    public boolean isOkPressed() {
+        return okPressed;
+    }
+    
+    protected void fillCmbCamera() {
+        if (cmbCamera.getItemCount() > 0) {
+            cmbCamera.setSelectedIndex(0);
+        }
+        final List<String> webcamNames = WebcamHandler.getWebcamNames(true);
+        cmbCamera.removeAllItems();
+        for (String name : webcamNames) {
+            cmbCamera.addItem(name);
+        }
+        cmbCamera.setSelectedIndex(0);
+    }
+    
+    protected void qrCodeProcessorTextValueChanged(final TextEvent event) {
+        final String qrAddress = qrCodeProcessor.getAddress();
+        final String qrMatchingId= qrCodeProcessor.getMatchingId();
+        
+        if (qrAddress != null && qrMatchingId != null) {
+            txtInput.setText(qrMatchingId);
+            if (((DefaultComboBoxModel)cmbServer.getModel()).getIndexOf(qrAddress) == -1) {
+                ((DefaultComboBoxModel)cmbServer.getModel()).addElement(qrAddress);
+            }
+            cmbServer.setSelectedItem(qrAddress);
+        }
     }
 
     /**
@@ -66,10 +114,16 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         btnCancel = new javax.swing.JButton();
         cmbServer = new javax.swing.JComboBox<>();
         jLabel2 = new javax.swing.JLabel();
+        panCamera = new javax.swing.JPanel();
+        cmbCamera = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
-        setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -94,37 +148,55 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
             }
         });
 
-        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io", "rsp-mow.smdp.io" }));
+        cmbServer.setEditable(true);
+        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io", "rsp-mow.smdp.io" }));
 
         jLabel2.setText("Server URL");
+
+        panCamera.setBackground(new java.awt.Color(255, 255, 255));
+        panCamera.setMinimumSize(new java.awt.Dimension(300, 0));
+        panCamera.setPreferredSize(new java.awt.Dimension(300, 0));
+        panCamera.setSize(new java.awt.Dimension(300, 100));
+        panCamera.setLayout(new java.awt.GridLayout(1, 1));
+
+        cmbCamera.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbCameraItemStateChanged(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(26, 26, 26)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, 313, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(31, 31, 31)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, 313, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(panCamera, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmbCamera, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnCancel)
+                .addGap(18, 18, 18)
+                .addComponent(btnOK)
+                .addGap(3, 3, 3))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
                     .addGap(77, 77, 77)
                     .addComponent(lblText, javax.swing.GroupLayout.PREFERRED_SIZE, 307, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(6, 6, 6))
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                    .addComponent(btnCancel)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(btnOK)
-                    .addGap(36, 36, 36)))
+                    .addGap(120, 120, 120)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -133,21 +205,25 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))))
-                .addContainerGap(62, Short.MAX_VALUE))
+                            .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cmbCamera, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel2))
+                            .addComponent(panCamera, javax.swing.GroupLayout.PREFERRED_SIZE, 214, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCancel)
+                    .addComponent(btnOK))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
                     .addGap(4, 4, 4)
                     .addComponent(lblText, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 69, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(btnOK)
-                        .addComponent(btnCancel))
-                    .addGap(4, 4, 4)))
+                    .addContainerGap(299, Short.MAX_VALUE)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -173,18 +249,62 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
 
     private void btnOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOKActionPerformed
         value=txtInput.getText();
+        okPressed = true;
         dispose();
     }//GEN-LAST:event_btnOKActionPerformed
 
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        if (webcam != null) {
+            panel.stop();
+            webcam.close();
+        }
+    }//GEN-LAST:event_formWindowClosed
+
+    private void cmbCameraItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbCameraItemStateChanged
+        if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+            if (webcam != null) {
+                panel.stop();
+                panCamera.remove(panel);
+                
+                webcam.removeWebcamListener(qrCodeProcessor);
+                webcam.close();
+            }
+            webcam = WebcamHandler.getWebcamByName((String) evt.getItem());
+            if (webcam != null) {
+                LOG.log(Level.INFO, "Using camera: " + webcam.getName());
+                webcam.setViewSize(WebcamResolution.VGA.getSize());
+                webcam.addWebcamListener(qrCodeProcessor);
+
+                panel = new WebcamPanel(webcam, false);
+                panel.setFPSDisplayed(true);
+
+                panCamera.add(panel);
+                pack();
+
+                Thread t = new Thread() {
+
+                        @Override
+                        public void run() {
+                                panel.start();
+                        }
+                };
+                t.setName("example-stoper");
+                t.setDaemon(true);
+                t.start();
+            }
+        }
+    }//GEN-LAST:event_cmbCameraItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnOK;
+    private javax.swing.JComboBox<String> cmbCamera;
     private javax.swing.JComboBox<String> cmbServer;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblText;
+    private javax.swing.JPanel panCamera;
     private javax.swing.JTextField txtInput;
     // End of variables declaration//GEN-END:variables
 }
