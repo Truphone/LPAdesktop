@@ -309,6 +309,7 @@ public class LPAUI extends javax.swing.JFrame {
 
         btnAddProfile.setForeground(new java.awt.Color(0, 50, 63));
         btnAddProfile.setText("Download");
+        btnAddProfile.setEnabled(false);
         btnAddProfile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAddProfileActionPerformed(evt);
@@ -958,7 +959,7 @@ public class LPAUI extends javax.swing.JFrame {
         btnRefreshReaders.setEnabled(!processing);
         btnConnect.setEnabled(!processing);
         btnSetSMDPAddress.setEnabled(!processing);
-//        btnAddProfile.setEnabled(!processing);
+        btnAddProfile.setEnabled(!processing);
 
         cmbReaders.setEditable(!processing);
         btnHandleNotifications.setEnabled(!processing);
