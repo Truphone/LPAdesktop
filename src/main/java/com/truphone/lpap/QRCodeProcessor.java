@@ -100,11 +100,9 @@ public class QRCodeProcessor implements WebcamListener {
             final String[] tokens = input.split("\\$");
             
             if (tokens.length == 3) {
-                if (!tokens[1].equals(address) || !tokens[2].equals(matchingId)) {
-                    address = tokens[1];
-                    matchingId = tokens[2];
-                    notifyTextListeners(new TextEvent(this, TextEvent.TEXT_VALUE_CHANGED));
-                }
+                address = tokens[1];
+                matchingId = tokens[2];
+                notifyTextListeners(new TextEvent(this, TextEvent.TEXT_VALUE_CHANGED));
                 return true;
             }
         }
