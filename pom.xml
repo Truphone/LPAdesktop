@@ -9,6 +9,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <maven.build.timestamp.format>dd-MM-yyyy HH:mm</maven.build.timestamp.format>
     </properties>
     
     <dependencies>
@@ -70,7 +72,16 @@
     </dependencies>
     <name>LPASCR</name>
     <build>
-         
+         <resources>
+            <resource>
+                <directory>src/main/resources/filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -83,7 +94,7 @@
                             <goal> copy-resources </goal>
                         </goals>
                         <configuration>
-                            <outputDirectory> ${basedir}/target/TruLPA_${version}/config </outputDirectory>
+                            <outputDirectory> ${basedir}/target/TruLPA_${project.version}/config </outputDirectory>
                             
                             <resources>
                                 <!--                                <resource>
@@ -136,7 +147,7 @@
             </plugin>
           
             
-            <plugin>
+<!--            <plugin>
                 <groupId>com.github.wvengen</groupId>
                 <artifactId>proguard-maven-plugin</artifactId>
                 <executions>
@@ -156,10 +167,11 @@
                         <lib>${java.home}/lib/rt.jar</lib>
                     </libs>
                 </configuration>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.1.1</version>
                 <executions>
                     <execution>
                         <id>l4j-clui</id>
@@ -169,8 +181,8 @@
                         </goals>
                         <configuration>
                             <headerType>console</headerType>
-                            <outfile>target/TruLPA_${version}/lpa.exe</outfile>
-                            <jar>target/LPA-${version}-jar-with-dependencies.jar</jar>
+                            <outfile>target/TruLPA_${project.version}/lpa.exe</outfile>
+                            <jar>target/LPA-${project.version}-jar-with-dependencies.jar</jar>
                             <icon>${basedir}/src/main/resources/tru_logo.ico</icon>
                             <errTitle>LPA</errTitle>
                             <classPath>
@@ -186,12 +198,12 @@
                                 </opts>-->
                             </jre>
                             <versionInfo>
-                                <fileVersion>${version}</fileVersion>
-                                <txtFileVersion>${version}</txtFileVersion>
+                                <fileVersion>${project.version}</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>Truphone LPA Simulator</fileDescription>
                                 <copyright>Truphone 2019</copyright>
-                                <productVersion>${version}</productVersion>
-                                <txtProductVersion>${version}</txtProductVersion>
+                                <productVersion>${project.version}</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
                                 <productName>Tru LPA</productName>
                                 <internalName>LPA</internalName>
                                 <originalFilename>lpa.exe</originalFilename>
