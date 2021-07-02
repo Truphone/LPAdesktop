@@ -5,7 +5,9 @@
  */
 package com.truphone.lpap;
 
+import com.truphone.lpap.info.AboutDialog;
 import com.truphone.lpad.progress.ProgressListener;
+import com.truphone.lpap.info.InfoProvider;
 import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
 import com.truphone.util.LogStub;
 import java.awt.BorderLayout;
@@ -62,13 +64,21 @@ import javax.swing.JTextArea;
 public class LPAUI extends javax.swing.JFrame {
 
     private static java.util.logging.Logger LOG = null;
+    
     private WaitingDialog waitDlg;
 
-    LpaSrc lpa;
+    private LpaSrc lpa;
+    
     //String serverAddress = "", ssl_validation = "", keystore_file = "";
-    String cardReaderToUse = "", cardReaderFromProps = "";
+    private String cardReaderToUse = "";
+    
+    private String cardReaderFromProps = "";
+    
     private Point initialClick;
-    List<Map<String, String>> profiles;
+    
+    private List<Map<String, String>> profiles;
+    
+    private final InfoProvider infoProvider = new InfoProvider();
 
     /**
      * Creates new form LPAUI
@@ -748,20 +758,8 @@ public class LPAUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCloseAppActionPerformed
 
     private void btnCloseApp2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseApp2ActionPerformed
-        // TODO add your handling code here:
-        StringBuilder sb = new StringBuilder();
-        sb.append("Truphone LPAdesktop (Truphone SM-DP+ only)").append(System.getProperty("line.separator"));
-
-        String version = getAppVersion();
-        if (version != null && version.length() > 0) {
-            sb.append("Version ").append(version).append(System.getProperty("line.separator"));
-        }
-
-        sb.append("Copyright (c) 2019 Truphone").append(System.getProperty("line.separator"));
-        sb.append("This application shall not be used or distributed without prior permission from Truphone.");
-
-        Util.showMessageDialog(this, sb.toString());
-
+        AboutDialog dialog = new AboutDialog(this, true);
+        dialog.setVisible(true);
     }//GEN-LAST:event_btnCloseApp2ActionPerformed
 
     private void btnHandleNotificationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHandleNotificationsActionPerformed
@@ -1004,13 +1002,8 @@ public class LPAUI extends javax.swing.JFrame {
     }
 
     public String getAppVersion() {
-        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-            //LMavenXpp3Reader reader = new MavenXpp3Reader();
-            //Model model = reader.read(new FileReader("pom.xml"));
-            //return model.getVersion();
-            getClass().getPackage().getImplementationVersion();
-        }
-        return getClass().getPackage().getImplementationVersion();
+        
+        return infoProvider.getAppVersion();
     }
 
     private void showLogs(String field, String value) {
