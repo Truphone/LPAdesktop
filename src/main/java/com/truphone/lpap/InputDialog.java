@@ -5,9 +5,6 @@
  */
 package com.truphone.lpap;
 
-import java.awt.Color;
-import javax.swing.BorderFactory;
-
 /**
  *
  * @author amilcar.pereira
@@ -31,7 +28,7 @@ public class InputDialog extends javax.swing.JDialog {
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            Util.setUpMacShortcuts(txtInput.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtInput.getInputMap());
         }
     }
 

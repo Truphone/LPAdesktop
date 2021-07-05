@@ -27,7 +27,7 @@ public class MessageDialog extends javax.swing.JDialog {
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            Util.setUpMacShortcuts(txtText.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtText.getInputMap());
         }
     }
 

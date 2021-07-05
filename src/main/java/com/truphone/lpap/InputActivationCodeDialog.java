@@ -5,13 +5,8 @@
  */
 package com.truphone.lpap;
 
-import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamPanel;
-import com.github.sarxos.webcam.WebcamResolution;
+import com.truphone.lpap.qrcode.QRCodeComponent;
 import java.awt.event.TextEvent;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 
 /**
@@ -19,9 +14,7 @@ import javax.swing.DefaultComboBoxModel;
  * @author amilcar.pereira
  */
 public class InputActivationCodeDialog extends javax.swing.JDialog {
-    
-    private static java.util.logging.Logger LOG = null;
-    
+        
     private boolean okPressed = false;
             
     private String value = null;
@@ -35,7 +28,6 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         super(parent, true);
         initComponents();
         panCamera.add(qrCodeProcessor);
-        LOG = Logger.getLogger(LPAUI.class.getName());
         qrCodeProcessor.addTextListener(new java.awt.event.TextListener() {
             @Override
             public void textValueChanged(TextEvent evt) {
@@ -48,7 +40,7 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            Util.setUpMacShortcuts(txtInput.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtInput.getInputMap());
         }
     }
 

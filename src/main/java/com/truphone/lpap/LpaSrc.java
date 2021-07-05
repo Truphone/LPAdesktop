@@ -5,21 +5,15 @@
  */
 package com.truphone.lpap;
 
+import com.truphone.lpap.card.ApduChannelImpl;
 import com.truphone.lpa.impl.LocalProfileAssistantImpl;
 import com.truphone.lpa.progress.DownloadProgress;
 import com.truphone.lpad.progress.Progress;
 import com.truphone.lpad.progress.ProgressListener;
-import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.smartcardio.CardException;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
 /**
  *

@@ -5,6 +5,8 @@
  */
 package com.truphone.lpap;
 
+import java.io.File;
+
 /**
  *
  * @author amilcar.pereira
@@ -16,6 +18,27 @@ public class mainUI {
     public static void main(String args[]) {
         
         System.setProperty("sun.security.smartcardio.library", "/System/Library/Frameworks/PCSC.framework/Versions/Current/PCSC");
+        
+        String loggingConfigFile;
+
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            loggingConfigFile = "contents/java/lib/logging.properties";
+        } else {
+            loggingConfigFile = "config/logging.properties";
+        }
+
+        File propFile = new File(loggingConfigFile);
+
+        if (propFile.exists()) {
+            System.setProperty("java.util.logging.config.file",
+                    loggingConfigFile);
+        }
+        // TODO: handle jar option
+        //        else {
+//            Util.showMessageDialog(this, "Couldn't find logging configuration");
+//            System.exit(0);
+//        }
+
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

@@ -5,6 +5,7 @@
  */
 package com.truphone.lpap;
 
+import static com.truphone.lpap.HexHelper.swapNibblesOnString;
 import com.truphone.lpap.info.AboutDialog;
 import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.lpap.info.InfoProvider;
@@ -63,7 +64,7 @@ import javax.swing.JTextArea;
  */
 public class LPAUI extends javax.swing.JFrame {
 
-    private static java.util.logging.Logger LOG = null;
+    private static final java.util.logging.Logger LOG = Logger.getLogger(LPAUI.class.getName());
     
     private WaitingDialog waitDlg;
 
@@ -84,27 +85,6 @@ public class LPAUI extends javax.swing.JFrame {
      * Creates new form LPAUI
      */
     public LPAUI() {
-
-        String loggingConfigFile = "logging.properties";
-
-
-        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-            loggingConfigFile = "contents/java/lib/logging.properties";
-        } else {
-            loggingConfigFile = "config/logging.properties";
-        }
-
-        File propFile = new File(loggingConfigFile);
-
-        if (propFile.exists()) {
-            System.setProperty("java.util.logging.config.file",
-                    loggingConfigFile);
-        } 
-//        else {
-//            Util.showMessageDialog(this, "Couldn't find logging configuration");
-//            System.exit(0);
-//        }
-        LOG = Logger.getLogger(LPAUI.class.getName());
 
 //        LocalDateTime today = LocalDateTime.now();
 //
@@ -128,27 +108,34 @@ public class LPAUI extends javax.swing.JFrame {
         initComponents();
 
         LogStub.getInstance().setAndroidLog(true);
-
         LogStub.getInstance().setLogLevel(Level.ALL);
         LOG.log(Level.INFO, "STARTING");
 
+        init();
+
+    }
+    
+    private void init() {
         try {
             refreshReadersList();
         } catch (CardException ex) {
             LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
+            DialogHelper.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
         }
 
         TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
+                @Override
                 public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];
                 }
 
+                @Override
                 public void checkClientTrusted(
                         java.security.cert.X509Certificate[] certs, String authType) {
                 }
 
+                @Override
                 public void checkServerTrusted(
                         java.security.cert.X509Certificate[] certs, String authType) {
                 }
@@ -178,7 +165,7 @@ public class LPAUI extends javax.swing.JFrame {
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            Util.setUpMacShortcuts(txtEuiccInfo.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtEuiccInfo.getInputMap());
         }
 
         //SET APP VERSION ON TITLE BAR
@@ -207,7 +194,6 @@ public class LPAUI extends javax.swing.JFrame {
         };
 
         listProfiles.addComponentListener(l);
-
     }
 
     /**
@@ -519,7 +505,7 @@ public class LPAUI extends javax.swing.JFrame {
             refreshReadersList();
         } catch (CardException ex) {
             LOG.log(Level.SEVERE, ex.toString());
-            Util.showMessageDialog(this, String.format("Failed to refresh readers list\nReason: %s\nPlease check the log.", ex.getMessage()));
+            DialogHelper.showMessageDialog(this, String.format("Failed to refresh readers list\nReason: %s\nPlease check the log.", ex.getMessage()));
         }
     }//GEN-LAST:event_btnRefreshReadersActionPerformed
 
@@ -536,7 +522,7 @@ public class LPAUI extends javax.swing.JFrame {
                     lpa.enableProfile(isdp_aid);
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, ex.toString());
-                    Util.showMessageDialog(null, String.format("Something went wrong\n Reason: %s \nPlease check the log for more info.", ex.getMessage()));
+                    DialogHelper.showMessageDialog(null, String.format("Something went wrong\n Reason: %s \nPlease check the log for more info.", ex.getMessage()));
                 }
 
                 listProfiles();
@@ -566,7 +552,7 @@ public class LPAUI extends javax.swing.JFrame {
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, ex.toString());
                     //Util.showMessageDialog(null, "Failed to Disable the profile with AID " + isdp_aid + ". Please check the log.");
-                    Util.showMessageDialog(null, String.format("Something wen't wrong\n Reason: %s\nPlease check the log for more info.", ex.getMessage()));
+                    DialogHelper.showMessageDialog(null, String.format("Something wen't wrong\n Reason: %s\nPlease check the log for more info.", ex.getMessage()));
                 }
 
                 listProfiles();
@@ -584,11 +570,11 @@ public class LPAUI extends javax.swing.JFrame {
 
         int idx = listProfiles.getSelectedIndex();
         String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
-        String iccid = Util.swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        String iccid = swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
         String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
 
         //if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-        if (Util.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile") == JOptionPane.YES_OPTION) {
+        if (DialogHelper.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile") == JOptionPane.YES_OPTION) {
 
             SwingWorker sw = new SwingWorker() {
                 @Override
@@ -601,8 +587,8 @@ public class LPAUI extends javax.swing.JFrame {
 
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, ex.toString());
-                        Util.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
-                        Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
+                        DialogHelper.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
+                        DialogHelper.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                     }
 
                     listProfiles();
@@ -628,11 +614,11 @@ public class LPAUI extends javax.swing.JFrame {
             } catch (CardException ex) {
                 LOG.log(Level.SEVERE, ex.toString());
                 //Util.showMessageDialog(this, String.format("Failed to start LPA: %s. Please check the log for more info.", ex.getMessage()));
-                Util.showMessageDialog(this, String.format("Failed to start LPA\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
+                DialogHelper.showMessageDialog(this, String.format("Failed to start LPA\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                 return;
             }
         } else {
-            Util.showMessageDialog(this, "No reader selected");
+            DialogHelper.showMessageDialog(this, "No reader selected");
         }
 
         lpa.setProgressListener(new ProgressListener() {
@@ -653,7 +639,7 @@ public class LPAUI extends javax.swing.JFrame {
                     updateEuiccInfo();
                 } catch (Exception ex) {
                     LOG.log(Level.WARNING, ex.toString());
-                    Util.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
+                    DialogHelper.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
                 }
 
                 setProcessing(false);
@@ -672,7 +658,7 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void btnAddProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddProfileActionPerformed
 //        String code = Util.showInputDialog(this, "Enter Activation Code or Truphone MatchingId", "");
-        Optional<String> code = Util.showInputActivationCodeDialog(this, "Enter the MatchingId", "");
+        Optional<String> code = DialogHelper.showInputActivationCodeDialog(this, "Enter the MatchingId", "");
         
         if (code.isPresent()) {
 
@@ -708,7 +694,7 @@ public class LPAUI extends javax.swing.JFrame {
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, ex.toString());
                     //Util.showMessageDialog(null, "Failed to download the profile. Please check the log.");
-                    Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
+                    DialogHelper.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                 }
                 listProfiles();
                 setProcessing(false);
@@ -728,7 +714,7 @@ public class LPAUI extends javax.swing.JFrame {
             LOG.log(Level.SEVERE, "Error getting configured SM-DP+ default address from eUICC", ex);
         }
         
-        Optional<String> address = Util.showInputDialog(this, "Enter new SMDP+ address", oldAddress != null ? oldAddress : "");
+        Optional<String> address = DialogHelper.showInputDialog(this, "Enter new SMDP+ address", oldAddress != null ? oldAddress : "");
         
         //lpa.setSMDPAddress(com.truphone.util.Util.ASCIIToHex(address));
         setProcessing(true);
@@ -740,7 +726,7 @@ public class LPAUI extends javax.swing.JFrame {
                 updateEuiccInfo();
             } catch (DecoderException | IOException ex) {
                 LOG.log(Level.WARNING, ex.toString());
-                Util.showMessageDialog(null, "Failed to read Euicc Info");
+                DialogHelper.showMessageDialog(null, "Failed to read Euicc Info");
             }
         }
             
@@ -775,7 +761,7 @@ public class LPAUI extends javax.swing.JFrame {
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, ex.toString());
 
-                    Util.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
+                    DialogHelper.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                 }
                 setProcessing(false);
 
@@ -799,7 +785,7 @@ public class LPAUI extends javax.swing.JFrame {
     private void miCopyIccidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyIccidActionPerformed
         int idx = listProfiles.getSelectedIndex();
         //String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
-        String iccid = Util.swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        String iccid = swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
         if (iccid.toLowerCase().charAt(iccid.length() - 1) == 'f') {
             //remove the 'f'
             iccid = iccid.substring(0, iccid.length() - 1);
@@ -1157,7 +1143,7 @@ public class LPAUI extends javax.swing.JFrame {
 
             boolean enabled = false;
             if (profile.containsKey("ICCID")) {
-                String iccidUnswapped = Util.swapNibblesOnString(profile.get("ICCID"));
+                String iccidUnswapped = swapNibblesOnString(profile.get("ICCID"));
                 fields[0] = iccidUnswapped.toLowerCase().charAt(19) == 'f' ? iccidUnswapped.substring(0, 19) : iccidUnswapped.substring(0, 20);
                 sb.append("ICCID: ").append(fields[0]).append("\r\n");
             }

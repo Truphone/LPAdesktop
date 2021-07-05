@@ -28,12 +28,11 @@ public class ConfirmDialog extends javax.swing.JDialog {
         initComponents();
         
         setLocationRelativeTo(parent);
-        
 
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            Util.setUpMacShortcuts(txtText.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtText.getInputMap());
         }
         
         this.setModal(true);
@@ -122,7 +121,7 @@ public class ConfirmDialog extends javax.swing.JDialog {
                         .addGap(24, 24, 24)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnYes)
                     .addComponent(btnNo))
                 .addContainerGap())

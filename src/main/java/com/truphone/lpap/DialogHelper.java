@@ -6,13 +6,7 @@
 package com.truphone.lpap;
 
 import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.Optional;
-import java.util.Properties;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
 import javax.swing.text.DefaultEditorKit;
@@ -21,42 +15,7 @@ import javax.swing.text.DefaultEditorKit;
  *
  * @author amilcar.pereira
  */
-public class Util {
-
-    public static Properties readProperties() throws URISyntaxException {
-        Properties prop = new Properties();
-        InputStream input = null;
-
-        try {
-
-            input = new FileInputStream(new File(main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile() + "/app.properties");
-
-            // load a properties file
-            prop.load(input);
-            System.out.println(prop);
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return prop;
-    }
-
-    public static String swapNibblesOnString(String in) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < in.length(); i += 2) {
-            result.append(in.charAt(i + 1));
-            result.append(in.charAt(i));
-        }
-        return result.toString();
-    }
+public class DialogHelper {
 
     public static void setUpMacShortcuts(javax.swing.InputMap im) {
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
@@ -101,6 +60,5 @@ public class Util {
 
         d.setVisible(true);
         return d.getResult();
-
     }
 }

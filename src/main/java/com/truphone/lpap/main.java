@@ -5,33 +5,23 @@
  */
 package com.truphone.lpap;
 
-import ch.qos.logback.core.FileAppender;
-import com.truphone.lpa.impl.LocalProfileAssistantImpl;
-import com.truphone.lpa.progress.DownloadProgress;
-import com.truphone.lpad.progress.Progress;
-import com.truphone.lpad.progress.ProgressListener;
 import com.truphone.util.LogStub;
 import com.truphone.util.Util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
@@ -47,24 +37,26 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class main {
 
-    private static java.util.logging.Logger LOG =null;
+    private static final Logger LOG;
 
     static {
-        InputStream stream = main.class.getClassLoader().
-                getResourceAsStream("logging.properties");
+        InputStream stream = main.class.getClassLoader().getResourceAsStream("logging.properties");
+        Logger logger = null;
         try {
             LogManager.getLogManager().readConfiguration(stream);
-            LOG = Logger.getLogger(main.class.getName());
+            logger = Logger.getLogger(main.class.getName());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
+        LOG = logger;
     }
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws CardException, Exception {
+    public static void main(final String[] args) throws CardException, Exception {
         System.setProperty("sun.security.smartcardio.library", "/System/Library/Frameworks/PCSC.framework/Versions/Current/PCSC");
         LogStub.getInstance().setAndroidLog(true);
 
@@ -92,7 +84,7 @@ public class main {
         TerminalFactory terminalFactory = TerminalFactory.getDefault();
         CardTerminals cardTerminals = terminalFactory.terminals();
 
-        if (cardTerminals.list().size() == 0) {
+        if (cardTerminals.list().isEmpty()) {
             throw new Exception("No card readers detected!");
         }
         if (cardTerminals.list().size() == 1) {
@@ -156,7 +148,7 @@ public class main {
 
             try {
                 option = Integer.parseInt(reader.readLine());
-            } catch (Exception ex) {
+            } catch (IOException | NumberFormatException ex) {
                 continue;
             }
 
@@ -194,13 +186,14 @@ public class main {
 
                         lpa.enableProfile(iccid);
 
-                    } catch (Exception ex) {
+                    } catch (CardException ex) {
                         System.out.println("Enable profile failed. ");
                         ex.printStackTrace();
 
                     }
 
                     break;
+
                 case 4:
                     System.out.println("Enter ICCID or AID:");
                     iccid = reader.readLine();
