@@ -28,7 +28,7 @@ public class LpaSrc {
 
     String cardReaderName;
 
-    public LpaSrc(String cardReader) throws CardException {
+    public LpaSrc(final String cardReader) throws CardException {
         
         
         this.cardReaderName = cardReader;

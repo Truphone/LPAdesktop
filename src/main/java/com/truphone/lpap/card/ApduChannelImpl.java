@@ -16,10 +16,8 @@ import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
-import javax.smartcardio.CardTerminals;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
-import javax.smartcardio.TerminalFactory;
 
 /**
  *
@@ -35,15 +33,10 @@ public class ApduChannelImpl implements ApduChannel {
     
     private ApduTransmittedListener apduTransmittedListener;
 
-    public ApduChannelImpl(String cardReader) throws CardException {
-        //open channel to the card
-        TerminalFactory terminalFactory = TerminalFactory.getDefault();
-        CardTerminals cardTerminals = terminalFactory.terminals();
-        //CardTerminal cardTerminal = cardTerminals.list().get(0);
-        CardTerminal cardTerminal = cardTerminals.getTerminal(cardReader);
-        Card card = cardTerminal.connect("T=0");
+    public ApduChannelImpl(final String cardReader) throws CardException {
+        final CardTerminal cardTerminal = CardTerminalHandler.getCardTerminalByName(cardReader);
+        final Card card = cardTerminal.connect("T=0");
         basicChannel = card.getBasicChannel();
-        
         
         ResponseAPDU responseApdu;
         byte[] apdu;

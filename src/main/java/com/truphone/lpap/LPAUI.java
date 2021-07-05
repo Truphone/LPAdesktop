@@ -7,7 +7,7 @@ package com.truphone.lpap;
 
 import static com.truphone.lpap.HexHelper.swapNibblesOnString;
 import com.truphone.lpap.info.AboutDialog;
-import com.truphone.lpad.progress.ProgressListener;
+import com.truphone.lpap.card.CardTerminalHandler;
 import com.truphone.lpap.info.InfoProvider;
 import com.truphone.rsp.dto.asn1.rspdefinitions.EuiccConfiguredAddressesResponse;
 import com.truphone.util.LogStub;
@@ -19,24 +19,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.smartcardio.CardException;
-import javax.smartcardio.CardTerminal;
-import javax.smartcardio.CardTerminals;
-import javax.smartcardio.TerminalFactory;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -71,10 +61,6 @@ public class LPAUI extends javax.swing.JFrame {
     private LpaSrc lpa;
     
     //String serverAddress = "", ssl_validation = "", keystore_file = "";
-    private String cardReaderToUse = "";
-    
-    private String cardReaderFromProps = "";
-    
     private Point initialClick;
     
     private List<Map<String, String>> profiles;
@@ -122,34 +108,6 @@ public class LPAUI extends javax.swing.JFrame {
             LOG.log(Level.SEVERE, ex.toString());
             DialogHelper.showMessageDialog(this, String.format("Failed to list available readers\nReason: %s\nCheck the logs for more info", ex.getMessage()));
         }
-
-        TrustManager[] trustAllCerts = new TrustManager[]{
-            new X509TrustManager() {
-                @Override
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                    return new X509Certificate[0];
-                }
-
-                @Override
-                public void checkClientTrusted(
-                        java.security.cert.X509Certificate[] certs, String authType) {
-                }
-
-                @Override
-                public void checkServerTrusted(
-                        java.security.cert.X509Certificate[] certs, String authType) {
-                }
-            }
-        };
-
-        // Install the all-trusting trust manager
-        try {
-            SSLContext sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (GeneralSecurityException e) {
-        }
-//        }
 
         lblProgress.setVisible(false);
 
@@ -568,15 +526,15 @@ public class LPAUI extends javax.swing.JFrame {
 
     private void miDeleteProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDeleteProfileActionPerformed
 
-        int idx = listProfiles.getSelectedIndex();
-        String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
-        String iccid = swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
-        String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
+        final int idx = listProfiles.getSelectedIndex();
+        final String isdp_aid = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ISDP_AID");
+        final String iccid = swapNibblesOnString(((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("ICCID"));
+        final String profileName = ((Map<String, String>) ((DefaultListModel) listProfiles.getModel()).getElementAt(idx)).get("PROFILE_NAME");
 
         //if (JOptionPane.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
         if (DialogHelper.showConfirmDialog(this, String.format("Are you sure you want to delete the profile %s - ICCID %s - AID %s", profileName, iccid, isdp_aid), "Delete Profile") == JOptionPane.YES_OPTION) {
 
-            SwingWorker sw = new SwingWorker() {
+            final SwingWorker sw = new SwingWorker() {
                 @Override
                 protected Object doInBackground() throws Exception {
                     setProcessing(true);
@@ -585,7 +543,7 @@ public class LPAUI extends javax.swing.JFrame {
                         lpa.disableProfile(isdp_aid);
                         lpa.deleteProfile(isdp_aid);
 
-                    } catch (Exception ex) {
+                    } catch (CardException ex) {
                         LOG.log(Level.SEVERE, ex.toString());
                         DialogHelper.showMessageDialog(null, "Failed to Enable the profile with AID " + isdp_aid + ". Please check the log.");
                         DialogHelper.showMessageDialog(null, String.format("Something went wrong\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
@@ -613,7 +571,6 @@ public class LPAUI extends javax.swing.JFrame {
                 lpa = new LpaSrc((String) cmbReaders.getSelectedItem());
             } catch (CardException ex) {
                 LOG.log(Level.SEVERE, ex.toString());
-                //Util.showMessageDialog(this, String.format("Failed to start LPA: %s. Please check the log for more info.", ex.getMessage()));
                 DialogHelper.showMessageDialog(this, String.format("Failed to start LPA\nReason: %s\nPlease check the log for more info.", ex.getMessage()));
                 return;
             }
@@ -621,12 +578,7 @@ public class LPAUI extends javax.swing.JFrame {
             DialogHelper.showMessageDialog(this, "No reader selected");
         }
 
-        lpa.setProgressListener(new ProgressListener() {
-            @Override
-            public void onAction(String phase, String step, Double percentage, String message) {
-
-            }
-        });
+        lpa.setProgressListener((String phase, String step, Double percentage, String message) -> {});
 
         SwingWorker sw = new SwingWorker() {
             @Override
@@ -637,7 +589,7 @@ public class LPAUI extends javax.swing.JFrame {
                 try {
                     listProfiles();
                     updateEuiccInfo();
-                } catch (Exception ex) {
+                } catch (IOException | DecoderException ex) {
                     LOG.log(Level.WARNING, ex.toString());
                     DialogHelper.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
                 }
@@ -844,12 +796,11 @@ public class LPAUI extends javax.swing.JFrame {
     }
 
     private void refreshReadersList() throws CardException {
-        TerminalFactory terminalFactory = TerminalFactory.getDefault();
-        CardTerminals cardTerminals = terminalFactory.terminals();
+        final List<String> terminalNames = CardTerminalHandler.getCardTerminalNames(true);
 
         cmbReaders.removeAllItems();
-        for (CardTerminal terminal : cardTerminals.list()) {
-            cmbReaders.addItem(terminal.getName());
+        for (String terminalName : terminalNames) {
+            cmbReaders.addItem(terminalName);
         }
     }
 
@@ -945,7 +896,7 @@ public class LPAUI extends javax.swing.JFrame {
         btnSetSMDPAddress.setEnabled(!processing);
         btnAddProfile.setEnabled(!processing);
 
-        cmbReaders.setEditable(!processing);
+        cmbReaders.setEnabled(!processing);
         btnHandleNotifications.setEnabled(!processing);
 
 //      }
