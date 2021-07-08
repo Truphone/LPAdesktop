@@ -19,7 +19,7 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
             
     private String value = null;
     
-    private final QRCodeComponent qrCodeProcessor = new QRCodeComponent();
+    private final QRCodeComponent qrCodeComponent = new QRCodeComponent();
     
     /**
      * Creates new form InputDialog
@@ -27,8 +27,8 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
     public InputActivationCodeDialog(java.awt.Frame parent) {
         super(parent, true);
         initComponents();
-        panCamera.add(qrCodeProcessor);
-        qrCodeProcessor.addTextListener(new java.awt.event.TextListener() {
+        panCamera.add(qrCodeComponent);
+        qrCodeComponent.addTextListener(new java.awt.event.TextListener() {
             @Override
             public void textValueChanged(TextEvent evt) {
                 qrCodeProcessorTextValueChanged(evt);
@@ -40,12 +40,12 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         //SET SHORTCUTS ON MAC
         boolean isMacOs = (System.getProperty("os.name").toLowerCase().contains("mac"));
         if (isMacOs) {
-            DialogHelper.setUpMacShortcuts(txtInput.getInputMap());
+            DialogHelper.setUpMacShortcuts(txtMatchingId.getInputMap());
         }
     }
 
     public void setPredefinedMatchingId(String text) {
-        txtInput.setText(text);
+        txtMatchingId.setText(text);
     }
 
     public String getMatchingId() {
@@ -62,11 +62,11 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
     
 
     protected void qrCodeProcessorTextValueChanged(final TextEvent event) {
-        final String qrAddress = qrCodeProcessor.getAddress();
-        final String qrMatchingId= qrCodeProcessor.getMatchingId();
+        final String qrAddress = qrCodeComponent.getAddress();
+        final String qrMatchingId= qrCodeComponent.getMatchingId();
         
         if (qrAddress != null && qrMatchingId != null) {
-            txtInput.setText(qrMatchingId);
+            txtMatchingId.setText(qrMatchingId);
             if (((DefaultComboBoxModel)cmbServer.getModel()).getIndexOf(qrAddress) == -1) {
                 ((DefaultComboBoxModel)cmbServer.getModel()).addElement(qrAddress);
             }
@@ -86,12 +86,13 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         lblText = new javax.swing.JLabel();
-        txtInput = new javax.swing.JTextField();
+        txtMatchingId = new javax.swing.JTextField();
         btnOK = new javax.swing.JButton();
         btnCancel = new javax.swing.JButton();
         cmbServer = new javax.swing.JComboBox<>();
-        jLabel2 = new javax.swing.JLabel();
+        lblServerURL = new javax.swing.JLabel();
         panCamera = new javax.swing.JPanel();
+        lblMatchingId = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Download Profile");
@@ -126,15 +127,18 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
         });
 
         cmbServer.setEditable(true);
-        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io", "rsp-mow.smdp.io" }));
+        cmbServer.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "rsp.truphone.com", "smdp.io", "rsp-staging.truphone.com", "rsp-sandbox.truphone.com", "rsp-ams.smdp.io", "rsp-mow.smdp.io" }));
+        cmbServer.setToolTipText("");
 
-        jLabel2.setText("Server URL");
+        lblServerURL.setText("Server URL");
 
         panCamera.setBackground(new java.awt.Color(255, 255, 255));
         panCamera.setMinimumSize(new java.awt.Dimension(300, 0));
         panCamera.setPreferredSize(new java.awt.Dimension(300, 0));
         panCamera.setSize(new java.awt.Dimension(300, 100));
         panCamera.setLayout(new java.awt.GridLayout(1, 1));
+
+        lblMatchingId.setText("Matching Id");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -143,14 +147,13 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(26, 26, 26)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, 313, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lblMatchingId)
+                    .addComponent(txtMatchingId, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
+                    .addComponent(lblServerURL)
+                    .addComponent(cmbServer, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
                 .addComponent(panCamera, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
@@ -171,13 +174,18 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
                 .addGap(27, 27, 27)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(panCamera, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lblMatchingId)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtMatchingId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(21, 21, 21)
+                        .addComponent(lblServerURL)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmbServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnCancel)
@@ -212,13 +220,13 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnCancelActionPerformed
 
     private void btnOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOKActionPerformed
-        value=txtInput.getText();
+        value=txtMatchingId.getText();
         okPressed = true;
         dispose();
     }//GEN-LAST:event_btnOKActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        qrCodeProcessor.dispose();
+        qrCodeComponent.dispose();
     }//GEN-LAST:event_formWindowClosed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -226,10 +234,11 @@ public class InputActivationCodeDialog extends javax.swing.JDialog {
     private javax.swing.JButton btnOK;
     private javax.swing.JComboBox<String> cmbServer;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel lblMatchingId;
+    private javax.swing.JLabel lblServerURL;
     private javax.swing.JLabel lblText;
     private javax.swing.JPanel panCamera;
-    private javax.swing.JTextField txtInput;
+    private javax.swing.JTextField txtMatchingId;
     // End of variables declaration//GEN-END:variables
 }

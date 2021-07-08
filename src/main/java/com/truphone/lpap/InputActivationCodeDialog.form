@@ -57,16 +57,14 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jLabel1" min="-2" pref="53" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                      <Group type="102" attributes="0">
-                          <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Component id="cmbServer" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <Component id="txtInput" min="-2" pref="313" max="-2" attributes="0"/>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Component id="lblMatchingId" min="-2" max="-2" attributes="0"/>
+                      <Component id="txtMatchingId" pref="313" max="32767" attributes="0"/>
+                      <Component id="lblServerURL" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="cmbServer" alignment="0" max="32767" attributes="0"/>
                   </Group>
-                  <EmptySpace type="separate" max="32767" attributes="0"/>
+                  <EmptySpace pref="26" max="32767" attributes="0"/>
                   <Component id="panCamera" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -92,14 +90,20 @@
                   <EmptySpace min="27" pref="27" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="panCamera" pref="252" max="32767" attributes="0"/>
-                      <Component id="jLabel1" alignment="0" min="-2" pref="51" max="-2" attributes="0"/>
-                      <Group type="102" alignment="0" attributes="0">
-                          <Component id="txtInput" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="cmbServer" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jLabel1" alignment="0" min="-2" pref="51" max="-2" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="lblMatchingId" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="txtMatchingId" min="-2" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
+                          <EmptySpace min="-2" pref="21" max="-2" attributes="0"/>
+                          <Component id="lblServerURL" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="cmbServer" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -141,7 +145,7 @@
             </Property>
           </Properties>
         </Component>
-        <Component class="javax.swing.JTextField" name="txtInput">
+        <Component class="javax.swing.JTextField" name="txtMatchingId">
         </Component>
         <Component class="javax.swing.JButton" name="btnOK">
           <Properties>
@@ -163,20 +167,22 @@
           <Properties>
             <Property name="editable" type="boolean" value="true"/>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="5">
-                <StringItem index="0" value="smdp.io"/>
-                <StringItem index="1" value="rsp-staging.truphone.com"/>
-                <StringItem index="2" value="rsp-sandbox.truphone.com"/>
-                <StringItem index="3" value="rsp-ams.smdp.io"/>
-                <StringItem index="4" value="rsp-mow.smdp.io"/>
+              <StringArray count="6">
+                <StringItem index="0" value="rsp.truphone.com"/>
+                <StringItem index="1" value="smdp.io"/>
+                <StringItem index="2" value="rsp-staging.truphone.com"/>
+                <StringItem index="3" value="rsp-sandbox.truphone.com"/>
+                <StringItem index="4" value="rsp-ams.smdp.io"/>
+                <StringItem index="5" value="rsp-mow.smdp.io"/>
               </StringArray>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value=""/>
           </Properties>
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
           </AuxValues>
         </Component>
-        <Component class="javax.swing.JLabel" name="jLabel2">
+        <Component class="javax.swing.JLabel" name="lblServerURL">
           <Properties>
             <Property name="text" type="java.lang.String" value="Server URL"/>
           </Properties>
@@ -202,6 +208,11 @@
             <Property name="rows" type="int" value="1"/>
           </Layout>
         </Container>
+        <Component class="javax.swing.JLabel" name="lblMatchingId">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Matching Id"/>
+          </Properties>
+        </Component>
       </SubComponents>
     </Container>
   </SubComponents>
