@@ -74,16 +74,6 @@ public class WebcamQRCodeScanner extends JDialog {
             final StringBuilder sb = new StringBuilder();
             sb.append("Server address: ").append(qrAddress).append("\n");
             sb.append("MatchingId: ").append(qrMatchingId).append("\n");
-//            if (acparts.length > 3) {
-//                sb.append("OID: " + acparts[3] + "\n");
-//            } else {
-//                sb.append("OID: " + "\n");
-//            }
-//            if (acparts.length > 4) {
-//                sb.append("Confirmation Code: " + acparts[4] + "\n");
-//            } else {
-//                sb.append("Confirmation Code: " + "\n");
-//            }
             System.out.println(sb);
             activationCode = fullInput.substring(4);
             System.out.println("CLOSING");
