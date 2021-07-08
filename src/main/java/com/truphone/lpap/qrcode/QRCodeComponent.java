@@ -19,7 +19,6 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import com.truphone.lpap.LPAUI;
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.TextEvent;
 import java.awt.event.TextListener;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
@@ -49,6 +47,8 @@ public class QRCodeComponent extends JPanel implements WebcamListener {
     private String address = null;
     
     private String matchingId = null;
+    
+    private String fullInput = null;
     
     private final List<TextListener> textListeners = new ArrayList<>();
     
@@ -78,6 +78,10 @@ public class QRCodeComponent extends JPanel implements WebcamListener {
     public String getMatchingId() {
         return matchingId;
     }
+    
+    public String getFullInput() {
+        return fullInput;
+    }
 
     @Override
     public void webcamOpen(WebcamEvent we) {
@@ -105,10 +109,11 @@ public class QRCodeComponent extends JPanel implements WebcamListener {
         }
         
         if (result != null) {
+            fullInput = result.getText();
             if (!updateFields(result.getText())) {
-                LOG.log(Level.INFO, "Read invalid qrcode: " + result.getText());
+                LOG.log(Level.INFO, "Read invalid qrcode: " + fullInput);
             } else {
-                LOG.log(Level.INFO, "Read valid qrcode: " + result.getText());
+                LOG.log(Level.INFO, "Read valid qrcode: " + fullInput);
             }
         }
     }
@@ -128,16 +133,6 @@ public class QRCodeComponent extends JPanel implements WebcamListener {
         matchingId = null;
         notifyTextListeners(new TextEvent(this, TextEvent.TEXT_VALUE_CHANGED));
         return false;
-    }
-    
-    public static void main(String[] args) {
-        JFrame frm = new JFrame();
-        frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frm.getContentPane().setLayout(new GridLayout(1, 1));
-        frm.setSize(300, 300);
-        QRCodeComponent pr = new QRCodeComponent();
-        frm.getContentPane().add(pr);
-        frm.setVisible(true);
     }
     
     private void initComponents() {
