@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.truphone</groupId>
     <artifactId>LPA</artifactId>
-    <version>0.1.2.23</version>
+    <version>1.0.0.0</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.truphone.lpad</groupId>
             <artifactId>lpad-sm-dp-plus-connector</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
+            <version>1.0.4</version>
         </dependency>
     </dependencies>
     <name>LPASCR</name>
