@@ -1,0 +1,9 @@
+version: '3'
+services:
+  lpadesktop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./target:/usr/src/LPAdesktop/target
+
