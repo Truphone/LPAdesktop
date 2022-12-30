@@ -589,7 +589,7 @@ public class LPAUI extends javax.swing.JFrame {
                 try {
                     listProfiles();
                     updateEuiccInfo();
-                } catch (IOException | DecoderException ex) {
+                } catch (Exception ex) {
                     LOG.log(Level.WARNING, ex.toString());
                     DialogHelper.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
                 }
