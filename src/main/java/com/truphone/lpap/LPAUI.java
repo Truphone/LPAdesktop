@@ -589,16 +589,16 @@ public class LPAUI extends javax.swing.JFrame {
                 try {
                     listProfiles();
                     updateEuiccInfo();
-                } catch (IOException | DecoderException ex) {
+
+                    btnAddProfile.setEnabled(true);
+                    btnSetSMDPAddress.setEnabled(true);
+                } catch (Exception ex) {
                     LOG.log(Level.WARNING, ex.toString());
                     DialogHelper.showMessageDialog(null, String.format("Failed to read card info \nReason: %s \nPlease check the log for more info.", ex.getMessage()));
+                    return null;
+                } finally {
+                    setProcessing(false);
                 }
-
-                setProcessing(false);
-
-                btnAddProfile.setEnabled(true);
-                btnSetSMDPAddress.setEnabled(true);
-
                 return null;
             }
         };
@@ -790,6 +790,7 @@ public class LPAUI extends javax.swing.JFrame {
     private javax.swing.JPopupMenu popUpProfiles;
     private javax.swing.JTextArea txtEuiccInfo;
     // End of variables declaration//GEN-END:variables
+    private HashMap<Component, Boolean> tempStateDisabledComponents = new HashMap<>();
 
     private void initLPA() throws URISyntaxException, Exception {
 
@@ -891,13 +892,18 @@ public class LPAUI extends javax.swing.JFrame {
 //        Thread t = new Thread() {
 //            public void run() {
         lblProgress.setVisible(processing);
-        btnRefreshReaders.setEnabled(!processing);
-        btnConnect.setEnabled(!processing);
-        btnSetSMDPAddress.setEnabled(!processing);
-        btnAddProfile.setEnabled(!processing);
 
-        cmbReaders.setEnabled(!processing);
-        btnHandleNotifications.setEnabled(!processing);
+        final Component[] buttons = Arrays.stream(mainPanel.getComponents()).filter(c -> c instanceof JButton).toArray(Component[]::new);
+        if (processing) {
+            tempStateDisabledComponents = Arrays.stream(buttons).peek(c -> tempStateDisabledComponents.put(c, c.isEnabled())).collect(Collectors.toMap(c -> c, Component::isEnabled, (a, b) -> b, HashMap::new));
+            for (Component component : buttons) {
+                component.setEnabled(false);
+            }
+        } else {
+            for (Component component : buttons) {
+                component.setEnabled(tempStateDisabledComponents.get(component));
+            }
+        }
 
 //      }
 //        };

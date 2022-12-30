@@ -27,15 +27,13 @@ public class mainUI {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        
-        System.setProperty("sun.security.smartcardio.library", "/System/Library/Frameworks/PCSC.framework/Versions/Current/PCSC");
-        
-        String loggingConfigFile;
+        String loggingConfigFile = "config/logging.properties";
 
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            System.setProperty("sun.security.smartcardio.library", "/System/Library/Frameworks/PCSC.framework/Versions/Current/PCSC");
             loggingConfigFile = "contents/java/lib/logging.properties";
-        } else {
-            loggingConfigFile = "config/logging.properties";
+        } else if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+            System.setProperty("sun.security.smartcardio.library", "/usr/lib/x86_64-linux-gnu/libpcsclite.so.1");
         }
 
         File propFile = new File(loggingConfigFile);
