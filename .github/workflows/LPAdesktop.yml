@@ -1,0 +1,20 @@
+name: LPAdesktop CI/CD  
+  
+on:  
+  push:  
+    branches:  
+      - main  
+  
+jobs:  
+  build:  
+    name: Build and Deploy  
+    runs-on: ubuntu-latest  
+    steps:  
+      - name: Checkout repository  
+        uses: actions/checkout@v2  
+        with:  
+          persist-credentials: false  
+      - name: Clone repository  
+        run: git clone https://github.com/Truphone/LPAdesktop.git  
+      - name: Start docker-compose  
+        run: cd LPAdesktop && docker-compose up -d
