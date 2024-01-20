@@ -1,0 +1,28 @@
+name: LPAdesktop output
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install Docker
+      run: 
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh ./get-docker.sh --dry-run
+    - name: Build and run Docker Compose
+      uses: docker/compose-action@v2.2.3
+      with:
+        compose-file: docker-compose.yml
+        up-flags: --build
+    - name: Archive /target folder
+      uses: actions/upload-artifact@v2
+      with:
+        name: target-folder
+        path: /target
